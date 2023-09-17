@@ -1,0 +1,31 @@
+{
+	"version": 1,
+	"formatters": {
+		"custom": {
+			"()": "custom_logging.CustomFormatter",
+			"fmt": "%(asctime)s | %(name)s | %(levelname)s | %(message)s",
+			"datefmt": "%m/%d/%Y %I:%M:%S %p",
+			"msecfmt": ""
+		}
+	},
+	"handlers": {
+		"console": {
+			"class": "logging.StreamHandler",
+			"level": "INFO",
+			"formatter": "custom",
+			"stream": "ext://sys.stdout"
+		}
+	},
+	"loggers": {
+		"root": {
+			"level": "NOTSET",
+			"handlers": ["console"]
+		},
+		"mainHandler": {
+			"level": "DEBUG",
+			"handlers": ["console"],
+			"propagate": true,
+			"qualname": "__main__"
+		}
+	}
+}
