@@ -1,43 +1,50 @@
 import pdb
+import os
 import json
 import time 
 import threading
 from bs4 import BeautifulSoup
-from concurrent.futures import ThreadPoolExecutor
+import multiprocessing as mp
 import urllib.parse as urlparse 
 
 class Probe:
+    startup = None
+    connection = None
+    probes_pool = None
+    poller = None
 
-    def __init__(self, startup, connection):
-        self.startup = startup 
-        self.__connection = connection
+    @classmethod
+    def initialize(cls, startup, connection) -> None:
+        available_cpus = len(os.sched_getaffinity(0))
+        cls.probes_pool = mp.Pool(processes=available_cpus)
+        cls.startup = startup
+        cls.connection = connection
+        cls.poller = threading.Thread(target=cls.probe_targets)
+        cls.poller.name = "Probe Inquisitor"
+        cls.poller.start()
 
-        poller = threading.Thread(target=self.__probe_targets, daemon=True)
-        poller.name = "Probe Inquisitor"
-        poller.start()
 
-
-    def __probe_targets(self):
-        print("PROBE")
+    @classmethod
+    def probe_targets(cls):
+        pdb.set_trace()
         while True:
-            if self.__connection.poll():
-                data = self.__connection.recv_bytes().decode('utf-8')
-                data = json.loads(data)
-                self.startup.logger.warning(data["url"])
-
-            # data = self.startup.queue.get(block=False)
-            # data = json.loads(data)
-            # print(data)
-            # self.finder.startup.logger.warning(data["url"])
+            if Probe.connection.poll():
+                link_data = Probe.connection.recv_bytes().decode('utf-8')
+                link_data = json.loads(link_data)
+                Probe.startup.logger.warning(link_data["url"])
+                # Probe.probes_pool.apply_async(
+                #     func=Probe._Probe__probe_link,
+                #     args=(link_data,))
 
 
-    def __extract_forms(self, response):
+    @classmethod
+    def __extract_forms(cls, response):
         parsed_html = BeautifulSoup(response, "html5lib")
         return parsed_html.findAll("form")
 
 
-    def __submit_form(self, form, value, url):
-
+    @classmethod
+    def __submit_form(cls, form, value, url):
         action = form.get("action")
         post_url = urlparse.urljoin(url, action)
         method = form.get("method")
@@ -51,32 +58,35 @@ class Probe:
                 input_value = value
             post_data[input_name] = input_value
         if method == 'POST':
-            return self.startup.session.post(post_url, data=post_data)
-        return self.startup.session.get(post_url, params=post_data)
+            return Probe.startup.session.post(post_url, data=post_data)
+        return Probe.startup.session.get(post_url, params=post_data)
 
 
-    def __test_xss_in_link(self, url):
+    @classmethod
+    def __test_xss_in_link(cls, url):
         xss_test_script = "<script>alert('test')</script>"
         url = url.replace("=", "=" + xss_test_script)
-        response = self.startup.session.get(url)
+        response = Probe.startup.session.get(url)
         return xss_test_script.encode() in response.content
 
 
-    def __test_xss_in_form(self, form, url):
+    @classmethod
+    def __test_xss_in_form(cls, form, url):
         xss_test_script = "<sCript>alert('test')</scriPt>"
-        response = self.__submit_form(form, xss_test_script, url)
-        time.sleep(self.startup.args["request_delay"])
+        response = cls.__submit_form(form, xss_test_script, url)
+        time.sleep(Probe.startup.args["request_delay"])
         return xss_test_script.encode() in response.content
 
 
-    def __probe_link(self, link, response):
-        forms = self.__extract_forms(response)
+    @classmethod
+    def __probe_link(cls, link_info):
+        link, respone = link_info["url"], link_info["response"]
+        Probe.startup.logger.debug("PROBING LINK" + link)
+        forms = cls.__extract_forms(response)
         for form in forms:
-            is_vulnerable_to_xss = self.__test_xss_in_form(form, link)
-            pdb.set_trace()
+            is_vulnerable_to_xss = cls.__test_xss_in_form(form, link)
             if is_vulnerable_to_xss:
-                self.startup.logger.debug("[***] XSS discovered in " + link + " in the following form")
-                # print(form)
+                Probe.startup.logger.debug("[***] XSS discovered in " + link + " in the following form")
 
         # if "=" in link:
         #     print("[+] Testing " + link)

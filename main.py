@@ -1,11 +1,9 @@
 #!/home/kali/anaconda3/bin/python
 
 import pdb
-import os, sys
-import time
+import sys
 import json
 import requests
-import threading
 import multiprocessing as mp
 import logging.config
 from cli_args import CLIArgs
@@ -14,7 +12,7 @@ from probe import Probe
 
 class FindAndProbeInit:
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.queue = mp.Queue()
         self.session = requests.Session()
 
@@ -34,21 +32,13 @@ class FindAndProbeInit:
 if __name__ == "__main__":
     
     try:
-        available_cpus = len(os.sched_getaffinity(0))
-        # process_pool = mp.Pool(processes=available_cpus)
-        finder_pipe, probe_pipe = mp.Pipe(duplex=True)
         startup_info = FindAndProbeInit()
-        finder = Finder(startup_info, finder_pipe)
-        probe = Probe(startup_info, probe_pipe)
-        # process_pool.apply_async(finder.crawl())
-        # finder_thread = threading.Thread(finder.crawl())
-        # finder_thread.name = "Finder Thread"
-        # finder_thread.start()
+        finder_pipe, probe_pipe = mp.Pipe(duplex=True)
+        Finder.initialize(startup_info, finder_pipe)
+        Probe.initialize(startup_info, probe_pipe)
+        finder = Finder()
+        probe = Probe()
 
-        # probe.probe_targets()
-        # probe_thread = threading.Thread(probe.probe_targets())
-        # probe_thread.name = "Probe Thread"
-        # probe_thread.start()
     except KeyboardInterrupt:
         logger.critical("USER PREMATURELY ENDED SCRIPT EXECUTION!")
         sys.exit(1)

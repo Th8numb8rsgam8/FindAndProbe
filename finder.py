@@ -3,16 +3,22 @@ import re
 import json
 import time
 import threading
+import multiprocessing as mp
 import requests.exceptions as exc
 import urllib.parse as urlparse 
 
 class Finder:
+    startup = None
+    connection = None
 
-    def __init__(self, startup, connection, ignore_links=[]):
-        self.startup = startup
-        self.__connection = connection
+    @classmethod
+    def initialize(cls, startup, connection) -> None:
+        cls.startup = startup
+        cls.connection = connection
+
+
+    def __init__(self, ignore_links=[]) -> None:
         self.__links_to_ignore = ignore_links
-
         self.__response_data = {
             "method": [],
             "path_url": [],
@@ -49,13 +55,13 @@ class Finder:
 
     def __extract_links_from(self, url):
         try:
-            response = self.startup.session.get(
+            response = Finder.startup.session.get(
                 url, 
-                timeout=self.startup.args["request_timeout"])
+                timeout=Finder.startup.args["request_timeout"])
             response.raise_for_status()
             to_probe = json.dumps({"url": url, "response": response.text})
-            # self.startup.queue.put(to_probe)
-            self.__connection.send_bytes(to_probe.encode('utf-8'))
+            # Finder.startup.queue.put(to_probe)
+            Finder.connection.send_bytes(to_probe.encode('utf-8'))
             self.__store_response_info(response)
             return re.findall(
                 '(?:href=")(.*?)"',
@@ -67,21 +73,21 @@ class Finder:
             exc.ConnectionError, 
             exc.TooManyRedirects,
             exc.RequestException) as e:
-            self.startup.logger.warning(str(e) + " " + url)
+            Finder.startup.logger.warning(str(e) + " " + url)
             return [] 
 
 
     def __crawl(self, url=None):
         if url == None:
-            url = self.startup.args["target_url"] 
+            url = Finder.startup.args["target_url"] 
         href_links = self.__extract_links_from(url)
-        time.sleep(self.startup.args["request_delay"])
+        time.sleep(Finder.startup.args["request_delay"])
         for link in href_links:
             link = urlparse.urljoin(url, link)
             if "#" in link:
                 link = link.split("#")[0]
-            if self.startup.args["target_url"] in link \
+            if Finder.startup.args["target_url"] in link \
                 and link not in self.__response_data["url"] \
                 and link not in self.__links_to_ignore:
-                    self.startup.logger.info(link)
+                    Finder.startup.logger.info(link)
                     self.__crawl(link)
