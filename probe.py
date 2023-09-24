@@ -1,50 +1,25 @@
 import pdb
-import os
-import json
 import time 
-import threading
 from bs4 import BeautifulSoup
-import multiprocessing as mp
 import urllib.parse as urlparse 
 
+
 class Probe:
-    startup = None
-    connection = None
-    probes_pool = None
-    poller = None
 
-    @classmethod
-    def initialize(cls, startup, connection) -> None:
-        available_cpus = len(os.sched_getaffinity(0))
-        cls.probes_pool = mp.Pool(processes=available_cpus)
-        cls.startup = startup
-        cls.connection = connection
-        cls.poller = threading.Thread(target=cls.probe_targets)
-        cls.poller.name = "Probe Inquisitor"
-        cls.poller.start()
+    def __init__(self, startup):
+        self.__startup = startup
 
 
-    @classmethod
-    def probe_targets(cls):
-        pdb.set_trace()
-        while True:
-            if Probe.connection.poll():
-                link_data = Probe.connection.recv_bytes().decode('utf-8')
-                link_data = json.loads(link_data)
-                Probe.startup.logger.warning(link_data["url"])
-                # Probe.probes_pool.apply_async(
-                #     func=Probe._Probe__probe_link,
-                #     args=(link_data,))
-
-
-    @classmethod
-    def __extract_forms(cls, response):
-        parsed_html = BeautifulSoup(response, "html5lib")
+    def __extract_forms(self, response):
+        try:
+            parsed_html = BeautifulSoup(response, "html5lib")
+        except:
+            print("PARSING ERROR")
+            return []
         return parsed_html.findAll("form")
 
 
-    @classmethod
-    def __submit_form(cls, form, value, url):
+    def __submit_form(self, form, value, url):
         action = form.get("action")
         post_url = urlparse.urljoin(url, action)
         method = form.get("method")
@@ -58,38 +33,35 @@ class Probe:
                 input_value = value
             post_data[input_name] = input_value
         if method == 'POST':
-            return Probe.startup.session.post(post_url, data=post_data)
-        return Probe.startup.session.get(post_url, params=post_data)
+            return self.__startup.session.post(post_url, data=post_data)
+        return self.__startup.session.get(post_url, params=post_data)
 
 
-    @classmethod
-    def __test_xss_in_link(cls, url):
+    def __test_xss_in_link(self, url):
         xss_test_script = "<script>alert('test')</script>"
         url = url.replace("=", "=" + xss_test_script)
-        response = Probe.startup.session.get(url)
+        response = self.__startup.session.get(url)
         return xss_test_script.encode() in response.content
 
 
-    @classmethod
-    def __test_xss_in_form(cls, form, url):
+    def __test_xss_in_form(self, form, url):
         xss_test_script = "<sCript>alert('test')</scriPt>"
-        response = cls.__submit_form(form, xss_test_script, url)
-        time.sleep(Probe.startup.args["request_delay"])
+        response = self.__submit_form(form, xss_test_script, url)
+        time.sleep(self.__startup.args["request_delay"])
         return xss_test_script.encode() in response.content
 
 
-    @classmethod
-    def __probe_link(cls, link_info):
-        link, respone = link_info["url"], link_info["response"]
-        Probe.startup.logger.debug("PROBING LINK" + link)
-        forms = cls.__extract_forms(response)
+    def probe_link(self, link_data):
+        link, response = link_data["url"], link_data["response"]
+        self.__startup.logger.info("PROBING")
+        forms = self.__extract_forms(response)
         for form in forms:
-            is_vulnerable_to_xss = cls.__test_xss_in_form(form, link)
+            is_vulnerable_to_xss = self.__test_xss_in_form(form, link)
             if is_vulnerable_to_xss:
-                Probe.startup.logger.debug("[***] XSS discovered in " + link + " in the following form")
+                self.__startup.logger.debug("[***] XSS discovered in " + link + " in the following form")
 
         # if "=" in link:
         #     print("[+] Testing " + link)
-        #     is_vulnerable_to_xss = self.__test_xss_in_link(link)
+        #     is_vulnerable_to_xss = __test_xss_in_link(link)
         #     if is_vulnerable_to_xss:
         #         print("[***] Discovered XSS in " + link)

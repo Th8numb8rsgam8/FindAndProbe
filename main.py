@@ -1,19 +1,21 @@
 #!/home/kali/anaconda3/bin/python
 
+import os, sys 
 import pdb
-import sys
 import json
+import time
 import requests
+import threading 
 import multiprocessing as mp
 import logging.config
 from cli_args import CLIArgs
 from finder import Finder
 from probe import Probe
 
+
 class FindAndProbeInit:
 
     def __init__(self) -> None:
-        self.queue = mp.Queue()
         self.session = requests.Session()
 
         # initialize CLI argument inputs
@@ -24,20 +26,56 @@ class FindAndProbeInit:
         # initialize logger
         f = open("finder_logging.json")
         logging_configs = json.load(f)
-        f.close()
+        f.close() 
         logging.config.dictConfig(logging_configs)
         self.logger = logging.getLogger(__name__)
+
+
+class Poller:
+
+    def __init__(self, startup_info, connection):
+        self.__startup_info = startup_info
+        self.__connection = connection
+
+
+    def run_probe(self, link_data):
+        probe = Probe(startup_info)
+        probe.probe_link(link_data)
+
+
+    def __observe_error(self, exc):
+        print(exc)
+
+
+    def poll_targets(self):
+        available_cpus = len(os.sched_getaffinity(0))
+        probes_pool = mp.Pool(processes=available_cpus)
+        while True:
+            if self.__connection.poll():
+                link_data = self.__connection.recv_bytes().decode('utf-8')
+                link_data = json.loads(link_data)
+                self.__startup_info.logger.warning(link_data["url"])
+                probes_pool.apply_async(
+                    func=self.run_probe, 
+                    args=(link_data,),
+                    error_callback=self.__observe_error)
+        probes_pool.close()
+        probes_pool.join()
 
 
 if __name__ == "__main__":
     
     try:
+        mp.set_start_method("fork")
         startup_info = FindAndProbeInit()
         finder_pipe, probe_pipe = mp.Pipe(duplex=True)
         Finder.initialize(startup_info, finder_pipe)
-        Probe.initialize(startup_info, probe_pipe)
         finder = Finder()
-        probe = Probe()
+        poller = Poller(startup_info, probe_pipe)
+
+        poll_thread = threading.Thread(target=poller.poll_targets)
+        poll_thread.name = "Probe Inquisitor"
+        poll_thread.start()
 
     except KeyboardInterrupt:
         logger.critical("USER PREMATURELY ENDED SCRIPT EXECUTION!")
