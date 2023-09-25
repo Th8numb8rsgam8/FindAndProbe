@@ -1,5 +1,6 @@
 import pdb
 import time 
+import multiprocessing as mp
 from bs4 import BeautifulSoup
 import urllib.parse as urlparse 
 
@@ -11,15 +12,13 @@ class Probe:
 
 
     def __extract_forms(self, response):
-        try:
-            parsed_html = BeautifulSoup(response, "html5lib")
-        except:
-            print("PARSING ERROR")
-            return []
+        self.__startup.logger.info("EXTRACTING")
+        parsed_html = BeautifulSoup(response, "html5lib")
         return parsed_html.findAll("form")
 
 
     def __submit_form(self, form, value, url):
+        self.__startup.logger.info("SUBMITTING")
         action = form.get("action")
         post_url = urlparse.urljoin(url, action)
         method = form.get("method")
@@ -58,7 +57,8 @@ class Probe:
         for form in forms:
             is_vulnerable_to_xss = self.__test_xss_in_form(form, link)
             if is_vulnerable_to_xss:
-                self.__startup.logger.debug("[***] XSS discovered in " + link + " in the following form")
+                self.__startup.logger.info("[***] XSS discovered in " + link + " in the following form")
+        self.__startup.logger.info("DONE")
 
         # if "=" in link:
         #     print("[+] Testing " + link)

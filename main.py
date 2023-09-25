@@ -4,6 +4,8 @@ import os, sys
 import pdb
 import json
 import time
+import signal
+import platform
 import requests
 import threading 
 import multiprocessing as mp
@@ -36,49 +38,86 @@ class Poller:
     def __init__(self, startup_info, connection):
         self.__startup_info = startup_info
         self.__connection = connection
+        threading.excepthook = self.__thread_error
+
+
+    def run(self):
+        poll_thread = threading.Thread(target=self.poll_targets, daemon=True)
+        poll_thread.name = "Probe Inquisitor"
+        try:
+            poll_thread.start()
+        except KeyboardInterrupt:
+            poll_thread.join()
+            self.__startup_info.logger.critical("POLLER STOPPED")
+            sys.exit(1)
 
 
     def run_probe(self, link_data):
-        probe = Probe(startup_info)
+        probe = Probe(self.__startup_info)
         probe.probe_link(link_data)
 
 
+    def __thread_error(self, arg):
+        self.__startup_info.logger.critical("THREAD ERROR")
+
+
     def __observe_error(self, exc):
-        print(exc)
+        self.__startup_info.logger.critical(exc)
+
+
+    def __observe_finish(self, arg):
+        print("FINISHED")
+
+
+    def __probe_pool_init(self):
+        signal.signal(signal.SIGINT, signal.SIG_IGN)
 
 
     def poll_targets(self):
-        available_cpus = len(os.sched_getaffinity(0))
-        probes_pool = mp.Pool(processes=available_cpus)
-        while True:
-            if self.__connection.poll():
-                link_data = self.__connection.recv_bytes().decode('utf-8')
-                link_data = json.loads(link_data)
-                self.__startup_info.logger.warning(link_data["url"])
-                probes_pool.apply_async(
-                    func=self.run_probe, 
-                    args=(link_data,),
-                    error_callback=self.__observe_error)
-        probes_pool.close()
-        probes_pool.join()
+        try:
+            available_cpus = len(os.sched_getaffinity(0))
+            probes_pool = mp.Pool(
+                processes=available_cpus,
+                initializer=self.__probe_pool_init)
+            while True:
+                if self.__connection.poll():
+                    link_data = self.__connection.recv_bytes().decode('utf-8')
+                    link_data = json.loads(link_data)
+                    self.__startup_info.logger.warning(link_data["url"])
+                    probes_pool.apply_async(
+                        func=self.run_probe, 
+                        args=(link_data,),
+                        callback=self.__observe_finish,
+                        error_callback=self.__observe_error)
+            probes_pool.close()
+            probes_pool.join()
+        except KeyboardInterrupt:
+            self.__startup_info.logger.critical("POLLER ERROR")
+
+
+def signal_handler(sig, frame):
+    print("INTERRUPT SIGNAL")
+    sys.exit(0)
 
 
 if __name__ == "__main__":
     
     try:
-        mp.set_start_method("fork")
+        signal.signal(signal.SIGINT, signal_handler)
+        host_system = platform.system()
+        if host_system == "Linux":
+            mp.set_start_method("fork")
+        else:
+            mp.set_start_method("spawn")
         startup_info = FindAndProbeInit()
-        finder_pipe, probe_pipe = mp.Pipe(duplex=True)
-        Finder.initialize(startup_info, finder_pipe)
-        finder = Finder()
-        poller = Poller(startup_info, probe_pipe)
-
-        poll_thread = threading.Thread(target=poller.poll_targets)
-        poll_thread.name = "Probe Inquisitor"
-        poll_thread.start()
+        finder_pipe, poller_pipe = mp.Pipe(duplex=True)
+        finder = Finder(startup_info, finder_pipe)
+        poller = Poller(startup_info, poller_pipe)
+        finder.run()
+        poller.run()
 
     except KeyboardInterrupt:
-        logger.critical("USER PREMATURELY ENDED SCRIPT EXECUTION!")
+        startup_info.logger.critical("USER PREMATURELY ENDED SCRIPT EXECUTION!")
         sys.exit(1)
 
 #     try:

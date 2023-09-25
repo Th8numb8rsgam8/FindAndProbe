@@ -1,4 +1,5 @@
 import pdb
+import sys
 import re
 import json
 import time
@@ -8,16 +9,10 @@ import requests.exceptions as exc
 import urllib.parse as urlparse 
 
 class Finder:
-    startup = None
-    connection = None
 
-    @classmethod
-    def initialize(cls, startup, connection) -> None:
-        cls.startup = startup
-        cls.connection = connection
-
-
-    def __init__(self, ignore_links=[]) -> None:
+    def __init__(self, startup, connection, ignore_links=[]) -> None:
+        self.__startup = startup
+        self.__connection = connection
         self.__links_to_ignore = ignore_links
         self.__response_data = {
             "method": [],
@@ -33,9 +28,22 @@ class Finder:
             "history": [],
             "elapsed_time": []}
 
+        threading.excepthook = self.__thread_error
+
+
+    def __thread_error(self, arg):
+        self.__startup_info.logger.critical("FINDER ERROR")
+
+
+    def run(self) -> None:
         search_thread = threading.Thread(target=self.__crawl)
         search_thread.name = "Finder Thread"
-        search_thread.start()
+        try:
+            search_thread.start()
+        except KeyboardInterrupt:
+            search_thread.join()
+            self.__startup_info.logger.critical("FINDER STOPPED")
+            sys.exit(1)
 
 
     def __store_response_info(self, response):
@@ -55,13 +63,12 @@ class Finder:
 
     def __extract_links_from(self, url):
         try:
-            response = Finder.startup.session.get(
+            response = self.__startup.session.get(
                 url, 
-                timeout=Finder.startup.args["request_timeout"])
+                timeout=self.__startup.args["request_timeout"])
             response.raise_for_status()
             to_probe = json.dumps({"url": url, "response": response.text})
-            # Finder.startup.queue.put(to_probe)
-            Finder.connection.send_bytes(to_probe.encode('utf-8'))
+            self.__connection.send_bytes(to_probe.encode('utf-8'))
             self.__store_response_info(response)
             return re.findall(
                 '(?:href=")(.*?)"',
@@ -73,21 +80,24 @@ class Finder:
             exc.ConnectionError, 
             exc.TooManyRedirects,
             exc.RequestException) as e:
-            Finder.startup.logger.warning(str(e) + " " + url)
+            self.__startup.logger.warning(str(e) + " " + url)
             return [] 
 
 
     def __crawl(self, url=None):
-        if url == None:
-            url = Finder.startup.args["target_url"] 
-        href_links = self.__extract_links_from(url)
-        time.sleep(Finder.startup.args["request_delay"])
-        for link in href_links:
-            link = urlparse.urljoin(url, link)
-            if "#" in link:
-                link = link.split("#")[0]
-            if Finder.startup.args["target_url"] in link \
-                and link not in self.__response_data["url"] \
-                and link not in self.__links_to_ignore:
-                    Finder.startup.logger.info(link)
-                    self.__crawl(link)
+        try:
+            if url == None:
+                url = self.__startup.args["target_url"] 
+            href_links = self.__extract_links_from(url)
+            time.sleep(self.__startup.args["request_delay"])
+            for link in href_links:
+                link = urlparse.urljoin(url, link)
+                if "#" in link:
+                    link = link.split("#")[0]
+                if self.__startup.args["target_url"] in link \
+                    and link not in self.__response_data["url"] \
+                    and link not in self.__links_to_ignore:
+                        self.__startup.logger.info(link)
+                        self.__crawl(link)
+        except KeyboardInterrupt:
+            self.__startup_info.logger.critical("FINDER ERROR")

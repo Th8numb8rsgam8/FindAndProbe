@@ -22,7 +22,7 @@
 			"handlers": ["console"]
 		},
 		"mainHandler": {
-			"level": "DEBUG",
+			"level": "INFO",
 			"handlers": ["console"],
 			"propagate": true,
 			"qualname": "__main__"
