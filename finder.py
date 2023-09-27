@@ -6,7 +6,8 @@ import time
 import threading
 import multiprocessing as mp
 import requests.exceptions as exc
-import urllib.parse as urlparse 
+import urllib.parse as urlparse
+from init_support import *
 
 class Finder:
 
@@ -36,14 +37,11 @@ class Finder:
 
 
     def run(self) -> None:
-        search_thread = threading.Thread(target=self.__crawl)
-        search_thread.name = "Finder Thread"
-        try:
-            search_thread.start()
-        except KeyboardInterrupt:
-            search_thread.join()
-            self.__startup_info.logger.critical("FINDER STOPPED")
-            sys.exit(1)
+        finder_process = CustomProcess(
+            self.__crawl,
+            child_process_handler,
+            name="Finder Process")
+        finder_process.start()
 
 
     def __store_response_info(self, response):
@@ -85,19 +83,16 @@ class Finder:
 
 
     def __crawl(self, url=None):
-        try:
-            if url == None:
-                url = self.__startup.args["target_url"] 
-            href_links = self.__extract_links_from(url)
-            time.sleep(self.__startup.args["request_delay"])
-            for link in href_links:
-                link = urlparse.urljoin(url, link)
-                if "#" in link:
-                    link = link.split("#")[0]
-                if self.__startup.args["target_url"] in link \
-                    and link not in self.__response_data["url"] \
-                    and link not in self.__links_to_ignore:
-                        self.__startup.logger.info(link)
-                        self.__crawl(link)
-        except KeyboardInterrupt:
-            self.__startup_info.logger.critical("FINDER ERROR")
+        if url == None:
+            url = self.__startup.args["target_url"] 
+        href_links = self.__extract_links_from(url)
+        time.sleep(self.__startup.args["request_delay"])
+        for link in href_links:
+            link = urlparse.urljoin(url, link)
+            if "#" in link:
+                link = link.split("#")[0]
+            if self.__startup.args["target_url"] in link \
+                and link not in self.__response_data["url"] \
+                and link not in self.__links_to_ignore:
+                    self.__startup.logger.info(link)
+                    self.__crawl(link)
