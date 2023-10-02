@@ -1,6 +1,5 @@
 import pdb
 import time 
-import multiprocessing as mp
 from bs4 import BeautifulSoup
 import urllib.parse as urlparse 
 
@@ -9,6 +8,9 @@ class Probe:
 
     def __init__(self, startup):
         self.__startup = startup
+        with open("xss-payload-list.txt") as f:
+            self.__xss_payload_list = f.read().split("\n")
+            self.__xss_payload_list.pop()
 
 
     def __extract_forms(self, response):
@@ -18,7 +20,6 @@ class Probe:
 
 
     def __submit_form(self, form, value, url):
-        self.__startup.logger.info("SUBMITTING")
         action = form.get("action")
         post_url = urlparse.urljoin(url, action)
         method = form.get("method")
@@ -31,7 +32,7 @@ class Probe:
             if input_type == "text":
                 input_value = value
             post_data[input_name] = input_value
-        if method == 'POST':
+        if method.upper() == 'POST':
             return self.__startup.session.post(post_url, data=post_data)
         return self.__startup.session.get(post_url, params=post_data)
 
@@ -44,15 +45,19 @@ class Probe:
 
 
     def __test_xss_in_form(self, form, url):
-        xss_test_script = "<sCript>alert('test')</scriPt>"
-        response = self.__submit_form(form, xss_test_script, url)
-        time.sleep(self.__startup.args["request_delay"])
-        return xss_test_script.encode() in response.content
+        for idx, xss_payload in enumerate(self.__xss_payload_list):
+            self.__startup.logger.info(
+                f"PROBING: PAYLOAD {idx} - {xss_payload} -> TARGET - {url}")
+            response = self.__submit_form(form, xss_payload, url)
+            time.sleep(self.__startup.args["request_delay"])
+            is_vulnerable = xss_payload.encode() in response.content
+            if is_vulnerable:
+                self.__startup.logger.info(
+                    f"[***] XSS SUCCESSFUL PROBE WITH: {xss_payload} ON {url} FORM")
 
 
     def probe_link(self, link_data):
         link, response = link_data["url"], link_data["response"]
-        self.__startup.logger.info("PROBING")
         forms = self.__extract_forms(response)
         for form in forms:
             is_vulnerable_to_xss = self.__test_xss_in_form(form, link)

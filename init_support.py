@@ -1,14 +1,12 @@
 import pdb
 import sys
 import signal
+from custom_logging import cli_output
 import multiprocessing as mp
 
+
 def signal_handler(sig, frame):
-    sys.exit(1)
-
-
-def child_process_handler(sig, frame):
-    raise SigExc
+    cli_output.FATAL(f"\n{mp.current_process().name} EXITED w/ {signal.strsignal(sig)}\n")
 
 
 class SigExc(Exception):
@@ -17,17 +15,20 @@ class SigExc(Exception):
 
 class CustomProcess(mp.Process):
 
-    def __init__(self, my_func, sig_handler, *args, **kwargs):
+    def __init__(self, my_func, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.__exec_func = my_func
-        self.__sig_handler = sig_handler
+
+
+    def __process_handler(self, sig, frame):
+        raise SigExc
 
 
     def run(self):
-        signal.signal(signal.SIGINT, self.__sig_handler)
+        signal.signal(signal.SIGINT, self.__process_handler)
         while True:
             try:
                 self.__exec_func()
             except SigExc:
                 break
-        print(f"{mp.current_process().name} EXITED")
+        cli_output.FATAL(f"\n{mp.current_process().name} EXITED\n")

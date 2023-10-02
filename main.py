@@ -1,5 +1,3 @@
-#!/home/kali/anaconda3/bin/python
-
 import os, sys 
 import pdb
 import json
@@ -7,8 +5,8 @@ import time
 import signal
 import platform
 import requests
-import threading 
 import multiprocessing as mp
+from custom_logging import cli_output
 import logging.config
 from cli_args import CLIArgs
 from finder import Finder
@@ -39,13 +37,11 @@ class Poller:
     def __init__(self, startup_info, connection):
         self.__startup_info = startup_info
         self.__connection = connection
-        threading.excepthook = self.__thread_error
 
 
     def run(self):
         poll_process = CustomProcess(
             self.poll_targets, 
-            child_process_handler,
             name="Probe Inquisitor")
         poll_process.start()
 
@@ -55,16 +51,12 @@ class Poller:
         probe.probe_link(link_data)
 
 
-    def __thread_error(self, arg):
-        self.__startup_info.logger.critical("THREAD ERROR")
-
-
-    def __observe_error(self, exc):
+    def __probe_error(self, exc):
         self.__startup_info.logger.critical(exc)
 
 
-    def __observe_finish(self, arg):
-        print("FINISHED")
+    def __probe_finish(self, arg):
+        cli_output.OK("FINISHED")
 
 
     def __probe_pool_init(self):
@@ -85,12 +77,10 @@ class Poller:
                 probes_pool.apply_async(
                     func=self.run_probe, 
                     args=(link_data,),
-                    callback=self.__observe_finish,
-                    error_callback=self.__observe_error)
+                    callback=self.__probe_finish,
+                    error_callback=self.__probe_error)
         # probes_pool.close()
         # probes_pool.join()
-
-
 
 
 if __name__ == "__main__":
@@ -108,9 +98,6 @@ if __name__ == "__main__":
     finder.run()
     poller.run()
 
-    # except KeyboardInterrupt:
-    #     startup_info.logger.critical("USER PREMATURELY ENDED SCRIPT EXECUTION!")
-    #     sys.exit(1)
 
 #     try:
 #         with open(wordlist) as file:

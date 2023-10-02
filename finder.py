@@ -1,10 +1,7 @@
 import pdb
-import sys
 import re
 import json
 import time
-import threading
-import multiprocessing as mp
 import requests.exceptions as exc
 import urllib.parse as urlparse
 from init_support import *
@@ -29,8 +26,6 @@ class Finder:
             "history": [],
             "elapsed_time": []}
 
-        threading.excepthook = self.__thread_error
-
 
     def __thread_error(self, arg):
         self.__startup_info.logger.critical("FINDER ERROR")
@@ -39,7 +34,6 @@ class Finder:
     def run(self) -> None:
         finder_process = CustomProcess(
             self.__crawl,
-            child_process_handler,
             name="Finder Process")
         finder_process.start()
 
