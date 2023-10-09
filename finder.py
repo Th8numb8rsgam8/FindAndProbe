@@ -59,7 +59,10 @@ class Finder:
                 url, 
                 timeout=self.__startup.args["request_timeout"])
             response.raise_for_status()
-            to_probe = json.dumps({"url": url, "response": response.text})
+            to_probe = json.dumps({
+                "url": url, 
+                "response": response.text,
+                "status_code": response.status_code})
             self.__connection.send_bytes(to_probe.encode('utf-8'))
             self.__store_response_info(response)
             return re.findall(

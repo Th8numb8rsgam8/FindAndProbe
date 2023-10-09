@@ -50,10 +50,16 @@ class Probe:
                 f"PROBING: PAYLOAD {idx} - {xss_payload} -> TARGET - {url}")
             response = self.__submit_form(form, xss_payload, url)
             time.sleep(self.__startup.args["request_delay"])
-            is_vulnerable = xss_payload.encode() in response.content
-            if is_vulnerable:
+            # is_vulnerable = xss_payload.encode() in response.content
+            code_ignored = response.status_code in self.__startup.args["ignore_codes"]
+            if code_ignored:
+                self.__startup.logger.critical(
+                    f"CODE {response.status_code} \
+                    XSS FAILED PROBE WITH: {xss_payload} ON {url} FORM")
+            else:
                 self.__startup.logger.info(
-                    f"[***] XSS SUCCESSFUL PROBE WITH: {xss_payload} ON {url} FORM")
+                    f"CODE {response.status_code} \
+                    XSS SUCCESSFUL PROBE WITH: {xss_payload} ON {url} FORM")
 
 
     def probe_link(self, link_data):
