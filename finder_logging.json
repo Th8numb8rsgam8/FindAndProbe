@@ -1,31 +1,52 @@
 {
 	"version": 1,
-	"formatters": {
-		"custom": {
-			"()": "custom_logging.CustomFormatter",
-			"fmt": "%(asctime)s | %(name)s | %(levelname)s | %(message)s",
+	"formatters": 
+	{
+		"console_fmt": 
+		{
+			"()": "custom_logging.ConsoleLogging",
+			"fmt": "[%(asctime)s] | %(name)s | %(levelname)s | %(message)s",
+			"datefmt": "%m/%d/%Y %I:%M:%S %p",
+			"msecfmt": ""
+		},
+		"finder_fmt":
+		{
+			"()":"custom_logging.FinderLogging",
+			"fmt": "[%(asctime)s] | %(processName)s | %(levelname)s | %(message)s",
 			"datefmt": "%m/%d/%Y %I:%M:%S %p",
 			"msecfmt": ""
 		}
 	},
-	"handlers": {
-		"console": {
-			"class": "logging.StreamHandler",
+	"handlers": 
+	{
+		"console": 
+		{
 			"level": "INFO",
-			"formatter": "custom",
+			"class": "logging.StreamHandler",
+			"formatter": "console_fmt",
 			"stream": "ext://sys.stdout"
+		},
+		"finder_handler":
+		{
+			"class": "logging.FileHandler",
+			"level": "WARNING",
+			"formatter": "finder_fmt",
+			"filename": "finder.log"
 		}
 	},
-	"loggers": {
-		"root": {
-			"level": "NOTSET",
-			"handlers": ["console"]
-		},
-		"mainHandler": {
+	"loggers": 
+	{
+		"finderlog": 
+		{
 			"level": "INFO",
-			"handlers": ["console"],
+			"handlers": ["finder_handler"],
 			"propagate": true,
-			"qualname": "__main__"
+			"qualname": "finderlog"
 		}
+	},
+	"root": 
+	{
+		"level": "INFO",
+		"handlers": ["console"]
 	}
 }

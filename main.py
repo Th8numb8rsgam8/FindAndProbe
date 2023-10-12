@@ -29,7 +29,8 @@ class FindAndProbeInit:
         logging_configs = json.load(f)
         f.close() 
         logging.config.dictConfig(logging_configs)
-        self.logger = logging.getLogger(__name__)
+        self.logger = logging.getLogger("finderlog")
+        # pdb.set_trace()
 
 
 class Poller:

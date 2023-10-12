@@ -12,11 +12,15 @@ class CustomFormatter(logging.Formatter):
     RED = "\033[31m"
     RESET = "\033[0;0m"
 
+    def __init__(self, datefmt, msecfmt):
+        logging.Formatter.default_time_format = datefmt
+        logging.Formatter.default_msec_format = msecfmt
+
+
+class ConsoleLogging(CustomFormatter):
 
     def __init__(self, fmt, datefmt, msecfmt):
-        super().__init__()
-        logging.Formatter.default_time_format = datefmt
-        logging.Formatter.default_msec_format = msecfmt 
+        super().__init__(datefmt, msecfmt)
         self.fmt = fmt
         self.FORMATS = {
             logging.DEBUG: self.GREEN + self.fmt + self.RESET,
@@ -27,6 +31,27 @@ class CustomFormatter(logging.Formatter):
 
 
     def format(self, record):
+        # pdb.set_trace()
+        log_fmt = self.FORMATS.get(record.levelno)
+        formatter = logging.Formatter(log_fmt)
+        return formatter.format(record)
+
+
+class FinderLogging(CustomFormatter):
+
+    def __init__(self, fmt, datefmt, msecfmt):
+        super().__init__(datefmt, msecfmt)
+        self.fmt = fmt
+        self.FORMATS = {
+            logging.DEBUG: self.GREEN + self.fmt + self.RESET,
+            logging.INFO:  self.CYAN + self.fmt + self.RESET,
+            logging.WARNING: self.YELLOW + self.fmt + self.RESET,
+            logging.ERROR: self.RED + self.fmt + self.RESET,
+            logging.CRITICAL: self.RED + self.BOLD + self.fmt + self.RESET}
+
+
+    def format(self, record):
+        # pdb.set_trace()
         log_fmt = self.FORMATS.get(record.levelno)
         formatter = logging.Formatter(log_fmt)
         return formatter.format(record)

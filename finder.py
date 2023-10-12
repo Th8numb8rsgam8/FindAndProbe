@@ -32,6 +32,7 @@ class Finder:
 
 
     def run(self) -> None:
+        # self.__crawl()
         finder_process = CustomProcess(
             self.__crawl,
             name="Finder Process")
