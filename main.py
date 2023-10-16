@@ -25,12 +25,11 @@ class FindAndProbeInit:
         self.args = cli_args.argument_values
 
         # initialize logger
-        f = open("finder_logging.json")
+        f = open("logging_settings.json")
         logging_configs = json.load(f)
         f.close() 
         logging.config.dictConfig(logging_configs)
-        self.logger = logging.getLogger("finderlog")
-        # pdb.set_trace()
+        self.logger = logging.getLogger()
 
 
 class Poller:
@@ -65,7 +64,6 @@ class Poller:
 
 
     def poll_targets(self):
-        self.__startup_info.logger.warning("POLLER")
         available_cpus = len(os.sched_getaffinity(0))
         probes_pool = mp.Pool(
             processes=available_cpus,
@@ -74,7 +72,6 @@ class Poller:
             if self.__connection.poll():
                 link_data = self.__connection.recv_bytes().decode('utf-8')
                 link_data = json.loads(link_data)
-                self.__startup_info.logger.warning(link_data["url"])
                 probes_pool.apply_async(
                     func=self.run_probe, 
                     args=(link_data,),

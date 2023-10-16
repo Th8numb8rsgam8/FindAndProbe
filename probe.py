@@ -14,7 +14,6 @@ class Probe:
 
 
     def __extract_forms(self, response):
-        self.__startup.logger.info("EXTRACTING")
         parsed_html = BeautifulSoup(response, "html5lib")
         return parsed_html.findAll("form")
 
@@ -46,20 +45,19 @@ class Probe:
 
     def __test_xss_in_form(self, form, url):
         for idx, xss_payload in enumerate(self.__xss_payload_list):
-            self.__startup.logger.info(
-                f"PROBING: PAYLOAD {idx} - {xss_payload} -> TARGET - {url}")
+            # self.__startup.logger.info(
+            #     f"PROBING: PAYLOAD {idx} - {xss_payload} -> TARGET - {url}")
             response = self.__submit_form(form, xss_payload, url)
             time.sleep(self.__startup.args["request_delay"])
-            # is_vulnerable = xss_payload.encode() in response.content
             code_ignored = response.status_code in self.__startup.args["ignore_codes"]
-            if code_ignored:
-                self.__startup.logger.critical(
-                    f"CODE {response.status_code} \
-                    XSS FAILED PROBE WITH: {xss_payload} ON {url} FORM")
-            else:
-                self.__startup.logger.info(
-                    f"CODE {response.status_code} \
-                    XSS SUCCESSFUL PROBE WITH: {xss_payload} ON {url} FORM")
+            # if code_ignored:
+            #     self.__startup.logger.critical(
+            #         f"CODE {response.status_code} \
+            #         XSS FAILED PROBE WITH: {xss_payload} ON {url} FORM")
+            # else:
+            #     self.__startup.logger.info(
+            #         f"CODE {response.status_code} \
+            #         XSS SUCCESSFUL PROBE WITH: {xss_payload} ON {url} FORM")
 
 
     def probe_link(self, link_data):
@@ -67,9 +65,9 @@ class Probe:
         forms = self.__extract_forms(response)
         for form in forms:
             is_vulnerable_to_xss = self.__test_xss_in_form(form, link)
-            if is_vulnerable_to_xss:
-                self.__startup.logger.info("[***] XSS discovered in " + link + " in the following form")
-        self.__startup.logger.info("DONE")
+            # if is_vulnerable_to_xss:
+            #     self.__startup.logger.info("[***] XSS discovered in " + link + " in the following form")
+        # self.__startup.logger.info("DONE")
 
         # if "=" in link:
         #     print("[+] Testing " + link)

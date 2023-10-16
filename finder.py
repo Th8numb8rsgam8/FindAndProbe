@@ -1,9 +1,10 @@
 import pdb
 import re
 import json
-import time
+import time 
 import requests.exceptions as exc
 import urllib.parse as urlparse
+from custom_logging import CustomFormatter as cf
 from init_support import *
 
 class Finder:
@@ -27,10 +28,6 @@ class Finder:
             "elapsed_time": []}
 
 
-    def __thread_error(self, arg):
-        self.__startup_info.logger.critical("FINDER ERROR")
-
-
     def run(self) -> None:
         # self.__crawl()
         finder_process = CustomProcess(
@@ -39,7 +36,7 @@ class Finder:
         finder_process.start()
 
 
-    def __store_response_info(self, response):
+    def __store_response_info(self, response) -> None:
         self.__response_data["method"].append(response.request.method)
         self.__response_data["path_url"].append(response.request.path_url)
         self.__response_data["url"].append(response.request.url)
@@ -54,12 +51,13 @@ class Finder:
         self.__response_data["elapsed_time"].append(response.elapsed.total_seconds())
 
 
-    def __extract_links_from(self, url):
+    def __extract_links_from(self, url) -> list:
         try:
             response = self.__startup.session.get(
                 url, 
                 timeout=self.__startup.args["request_timeout"])
             response.raise_for_status()
+            self.__startup.logger.info(cf.GREEN + url + cf.RESET)
             to_probe = json.dumps({
                 "url": url, 
                 "response": response.text,
@@ -80,7 +78,7 @@ class Finder:
             return [] 
 
 
-    def __crawl(self, url=None):
+    def __crawl(self, url=None) -> None:
         if url == None:
             url = self.__startup.args["target_url"] 
         href_links = self.__extract_links_from(url)
@@ -92,5 +90,4 @@ class Finder:
             if self.__startup.args["target_url"] in link \
                 and link not in self.__response_data["url"] \
                 and link not in self.__links_to_ignore:
-                    self.__startup.logger.info(link)
                     self.__crawl(link)
