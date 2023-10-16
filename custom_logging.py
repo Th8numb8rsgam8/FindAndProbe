@@ -20,9 +20,10 @@ class CustomFormatter(logging.Formatter):
 
 class ConsoleLogging(CustomFormatter):
 
-    def __init__(self, fmt, datefmt, msecfmt):
+    def __init__(self, fmt, datefmt, msecfmt, defaults):
         super().__init__(datefmt, msecfmt)
         self.fmt = fmt
+        self.defaults = defaults
         self.FORMATS = {
             logging.DEBUG: self.GREEN + self.fmt + self.RESET,
             logging.INFO:  self.CYAN + self.fmt + self.RESET,
@@ -33,15 +34,16 @@ class ConsoleLogging(CustomFormatter):
 
     def format(self, record):
         log_fmt = self.FORMATS.get(record.levelno)
-        formatter = logging.Formatter(log_fmt)
+        formatter = logging.Formatter(log_fmt, defaults=self.defaults)
         return formatter.format(record)
 
 
 class FinderLogging(CustomFormatter):
 
-    def __init__(self, fmt, datefmt, msecfmt):
+    def __init__(self, fmt, datefmt, msecfmt, defaults):
         super().__init__(datefmt, msecfmt)
         self.fmt = fmt
+        self.defaults = defaults
 
 
     def format(self, record):
@@ -49,22 +51,44 @@ class FinderLogging(CustomFormatter):
         s, ms = divmod(record.relativeCreated, 1000)
         m, s = divmod(s, 60)
         h, m = divmod(m, 60)
-        record.relativeCreated = f"{h}:{m}:{s + round(ms/1000,3)}"
-        formatter = logging.Formatter(self.fmt)
+        record.relativeCreated = f"{round(h)}:{round(m)}:{s + round(ms/1000,3)}"
+        formatter = logging.Formatter(self.fmt, defaults=self.defaults)
+        return formatter.format(record)
+
+
+class ProbeLogging(CustomFormatter):
+
+    def __init__(self, fmt, datefmt, msecfmt, defaults):
+        super().__init__(datefmt, msecfmt)
+        self.fmt = fmt
+        self.defaults = defaults
+
+
+    def format(self, record):
+        # record.msg = re.sub('\\x1b\[.*?m', '', record.msg)
+        # s, ms = divmod(record.relativeCreated, 1000)
+        # m, s = divmod(s, 60)
+        # h, m = divmod(m, 60)
+        # record.relativeCreated = f"{h}:{m}:{s + round(ms/1000,3)}"
+        formatter = logging.Formatter(self.fmt, defaults=self.defaults)
         return formatter.format(record)
 
 
 class ConsoleFilter(logging.Filter):
 
     def filter(self, record):
-        # record.msg = CustomFormatter.GREEN + record.msg + CustomFormatter.RESET
         return True
 
 
 class FinderFilter(logging.Filter):
 
     def filter(self, record):
-        # pdb.set_trace()
+        return True
+
+
+class ProbeFilter(logging.Filter):
+
+    def filter(self, record):
         return True
 
 

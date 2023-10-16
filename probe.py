@@ -45,8 +45,9 @@ class Probe:
 
     def __test_xss_in_form(self, form, url):
         for idx, xss_payload in enumerate(self.__xss_payload_list):
-            # self.__startup.logger.info(
-            #     f"PROBING: PAYLOAD {idx} - {xss_payload} -> TARGET - {url}")
+            self.__startup.logger.info(
+                f"PROBING: PAYLOAD {idx} -> TARGET - {url}",
+                extra={"payload": xss_payload})
             response = self.__submit_form(form, xss_payload, url)
             time.sleep(self.__startup.args["request_delay"])
             code_ignored = response.status_code in self.__startup.args["ignore_codes"]

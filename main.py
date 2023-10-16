@@ -27,7 +27,6 @@ class FindAndProbeInit:
         # initialize logger
         f = open("logging_settings.json")
         logging_configs = json.load(f)
-        f.close() 
         logging.config.dictConfig(logging_configs)
         self.logger = logging.getLogger()
 

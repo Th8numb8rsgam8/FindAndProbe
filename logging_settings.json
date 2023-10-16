@@ -7,14 +7,24 @@
 			"()": "custom_logging.ConsoleLogging",
 			"fmt": "[%(asctime)s] | %(processName)s | %(levelname)s | %(message)s",
 			"datefmt": "%m/%d/%Y %I:%M:%S %p",
-			"msecfmt": ""
+			"msecfmt": "",
+			"defaults": {"payload": "None"}
 		},
 		"finder_fmt":
 		{
-			"()":"custom_logging.FinderLogging",
+			"()": "custom_logging.FinderLogging",
 			"fmt": "%(relativeCreated)-25s %(message)s",
 			"datefmt": "%m/%d/%Y %I:%M:%S %p",
-			"msecfmt": ""
+			"msecfmt": "",
+			"defaults": {"payload": "None"}
+		},
+		"probe_fmt":
+		{
+			"()": "custom_logging.ProbeLogging",
+			"fmt": "%(relativeCreated)-25s %(message)s %(payload)s",
+			"datefmt": "%m/%d/%Y %I:%M:%S %p",
+			"msecfmt": "",
+			"defaults": {"payload": "None"}
 		}
 	},
 	"filters":
@@ -28,6 +38,11 @@
 		{
 			"()": "custom_logging.FinderFilter",
 			"name": "finder_filter"
+		},
+		"probe_filter":
+		{
+			"()": "custom_logging.ProbeFilter",
+			"name": "probe_filter"
 		}
 	},
 	"handlers": 
@@ -46,12 +61,22 @@
 			"class": "logging.FileHandler",
 			"filters": ["finder_filter"],
 			"formatter": "finder_fmt",
-			"filename": "finder.log"
+			"filename": "finder.log",
+			"mode": "w"
+		},
+		"probe_handler":
+		{
+			"level": "INFO",
+			"class": "logging.FileHandler",
+			"filters": ["probe_filter"],
+			"formatter": "probe_fmt",
+			"filename": "probe.log",
+			"mode": "w"
 		}
 	},
 	"root": 
 	{
 		"level": "INFO",
-		"handlers": ["console", "finder_handler"]
+		"handlers": ["console", "finder_handler", "probe_handler"]
 	}
 }
