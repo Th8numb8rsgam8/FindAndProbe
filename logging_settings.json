@@ -8,7 +8,11 @@
 			"fmt": "[%(asctime)s] | %(processName)s | %(levelname)s | %(message)s",
 			"datefmt": "%m/%d/%Y %I:%M:%S %p",
 			"msecfmt": "",
-			"defaults": {"payload": "None"}
+			"defaults": 
+			{
+				"payload": "None",
+				"resposne": "None"
+			}
 		},
 		"finder_fmt":
 		{
@@ -16,15 +20,23 @@
 			"fmt": "%(relativeCreated)-25s %(message)s",
 			"datefmt": "%m/%d/%Y %I:%M:%S %p",
 			"msecfmt": "",
-			"defaults": {"payload": "None"}
+			"defaults": 
+			{
+				"payload": "None",
+				"response": "None"
+			}
 		},
 		"probe_fmt":
 		{
 			"()": "custom_logging.ProbeLogging",
-			"fmt": "%(relativeCreated)-25s %(message)s %(payload)s",
+			"fmt": "%(relativeCreated)-25s %(message)s | %(payload)s | %(response)s",
 			"datefmt": "%m/%d/%Y %I:%M:%S %p",
 			"msecfmt": "",
-			"defaults": {"payload": "None"}
+			"defaults": 
+			{
+				"payload": "None",
+				"response": "None"
+			}
 		}
 	},
 	"filters":

@@ -1,6 +1,8 @@
 import pdb
 import time 
+import http
 from bs4 import BeautifulSoup
+from custom_logging import CustomFormatter as cf
 import urllib.parse as urlparse 
 
 
@@ -8,6 +10,7 @@ class Probe:
 
     def __init__(self, startup):
         self.__startup = startup
+        self.__response_codes = {status.value: status.phrase for status in http.HTTPStatus}
         with open("xss-payload-list.txt") as f:
             self.__xss_payload_list = f.read().split("\n")
             self.__xss_payload_list.pop()
@@ -45,20 +48,25 @@ class Probe:
 
     def __test_xss_in_form(self, form, url):
         for idx, xss_payload in enumerate(self.__xss_payload_list):
-            self.__startup.logger.info(
-                f"PROBING: PAYLOAD {idx} -> TARGET - {url}",
-                extra={"payload": xss_payload})
             response = self.__submit_form(form, xss_payload, url)
             time.sleep(self.__startup.args["request_delay"])
             code_ignored = response.status_code in self.__startup.args["ignore_codes"]
-            # if code_ignored:
-            #     self.__startup.logger.critical(
-            #         f"CODE {response.status_code} \
-            #         XSS FAILED PROBE WITH: {xss_payload} ON {url} FORM")
-            # else:
-            #     self.__startup.logger.info(
-            #         f"CODE {response.status_code} \
-            #         XSS SUCCESSFUL PROBE WITH: {xss_payload} ON {url} FORM")
+            if code_ignored:
+                pass
+                # self.__startup.logger.critical(
+                #     f"CODE {response.status_code} \
+                #     XSS FAILED PROBE WITH: {xss_payload} ON {url} FORM")
+            else:
+                response = " ".join(
+                    [str(response.status_code), 
+                    self.__response_codes[response.status_code]])
+                self.__startup.logger.info(
+                    f"SUCCESSFUL PROBE: {cf.BOLD + url + cf.RESET}", 
+                    extra=
+                    {
+                        "payload": cf.GREEN + xss_payload + cf.RESET,
+                        "response": cf.CYAN + response + cf.RESET
+                    })
 
 
     def probe_link(self, link_data):

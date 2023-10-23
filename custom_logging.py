@@ -47,7 +47,7 @@ class FinderLogging(CustomFormatter):
 
 
     def format(self, record):
-        record.msg = re.sub('\\x1b\[.*?m', '', record.msg)
+        # record.msg = re.sub('\\x1b\[.*?m', '', record.msg)
         s, ms = divmod(record.relativeCreated, 1000)
         m, s = divmod(s, 60)
         h, m = divmod(m, 60)
@@ -66,10 +66,10 @@ class ProbeLogging(CustomFormatter):
 
     def format(self, record):
         # record.msg = re.sub('\\x1b\[.*?m', '', record.msg)
-        # s, ms = divmod(record.relativeCreated, 1000)
-        # m, s = divmod(s, 60)
-        # h, m = divmod(m, 60)
-        # record.relativeCreated = f"{h}:{m}:{s + round(ms/1000,3)}"
+        s, ms = divmod(record.relativeCreated, 1000)
+        m, s = divmod(s, 60)
+        h, m = divmod(m, 60)
+        record.relativeCreated = f"{h}:{m}:{s + round(ms/1000,3)}"
         formatter = logging.Formatter(self.fmt, defaults=self.defaults)
         return formatter.format(record)
 
@@ -83,13 +83,15 @@ class ConsoleFilter(logging.Filter):
 class FinderFilter(logging.Filter):
 
     def filter(self, record):
-        return True
+        if "PROBE" not in record.msg:
+            return True
 
 
 class ProbeFilter(logging.Filter):
 
     def filter(self, record):
-        return True
+        if "PROBE" in record.msg:
+            return True
 
 
 class cli_output:

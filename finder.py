@@ -56,6 +56,7 @@ class Finder:
             response = self.__startup.session.get(
                 url, 
                 timeout=self.__startup.args["request_timeout"])
+
             response.raise_for_status()
             self.__startup.logger.info(cf.GREEN + url + cf.RESET)
             to_probe = json.dumps({
