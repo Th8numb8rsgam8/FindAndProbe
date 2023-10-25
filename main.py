@@ -1,17 +1,14 @@
-import os, sys 
 import pdb
 import json
-import time
 import signal
 import platform
 import requests
 import multiprocessing as mp
-from custom_logging import cli_output
 import logging.config
-from cli_args import CLIArgs
-from finder import Finder
-from probe import Probe
-from init_support import *
+from utils.cli_args import *
+from utils.init_support import signal_handler
+from components.finder import Finder
+from components.poller import Poller
 
 
 class FindAndProbeInit:
@@ -20,68 +17,19 @@ class FindAndProbeInit:
         self.session = requests.Session()
 
         # initialize CLI argument inputs
-        cli_args = CLIArgs()
-        cli_args.collect_arguments()
-        self.args = cli_args.argument_values
+        user_input = CLIArgs()
+        user_input.collect_arguments()
+        self.args = user_input.argument_values
 
         # initialize logger
-        f = open("logging_settings.json")
+        f = open("logs/logging_settings.json")
         logging_configs = json.load(f)
         logging.config.dictConfig(logging_configs)
         self.logger = logging.getLogger()
 
 
-class Poller:
-
-    def __init__(self, startup_info, connection):
-        self.__startup_info = startup_info
-        self.__connection = connection
-
-
-    def run(self):
-        poll_process = CustomProcess(
-            self.poll_targets, 
-            name="Probe Inquisitor")
-        poll_process.start()
-
-
-    def run_probe(self, link_data):
-        probe = Probe(self.__startup_info)
-        probe.probe_link(link_data)
-
-
-    def __probe_error(self, exc):
-        self.__startup_info.logger.critical(exc)
-
-
-    def __probe_finish(self, arg):
-        cli_output.OK("FINISHED")
-
-
-    def __probe_pool_init(self):
-        signal.signal(signal.SIGINT, signal.SIG_IGN)
-
-
-    def poll_targets(self):
-        available_cpus = len(os.sched_getaffinity(0))
-        probes_pool = mp.Pool(
-            processes=available_cpus,
-            initializer=self.__probe_pool_init)
-        while True:
-            if self.__connection.poll():
-                link_data = self.__connection.recv_bytes().decode('utf-8')
-                link_data = json.loads(link_data)
-                probes_pool.apply_async(
-                    func=self.run_probe, 
-                    args=(link_data,),
-                    callback=self.__probe_finish,
-                    error_callback=self.__probe_error)
-        # probes_pool.close()
-        # probes_pool.join()
-
-
 if __name__ == "__main__":
-    
+
     signal.signal(signal.SIGINT, signal_handler)
     host_system = platform.system()
     if host_system == "Linux":
@@ -89,6 +37,7 @@ if __name__ == "__main__":
     else:
         mp.set_start_method("spawn")
     startup_info = FindAndProbeInit()
+
     finder_pipe, poller_pipe = mp.Pipe(duplex=True)
     finder = Finder(startup_info, finder_pipe)
     poller = Poller(startup_info, poller_pipe)

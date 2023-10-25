@@ -1,7 +1,7 @@
 import pdb
 import sys
 import signal
-from custom_logging import cli_output
+from logs.custom_logging import cli_output
 import multiprocessing as mp
 
 

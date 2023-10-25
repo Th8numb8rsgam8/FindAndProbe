@@ -4,8 +4,8 @@ import json
 import time 
 import requests.exceptions as exc
 import urllib.parse as urlparse
-from custom_logging import CustomFormatter as cf
-from init_support import *
+from logs.custom_logging import CustomFormatter as cf
+from utils.init_support import CustomProcess 
 
 class Finder:
 

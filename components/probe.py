@@ -1,8 +1,9 @@
 import pdb
 import time 
 import http
+import glob
 from bs4 import BeautifulSoup
-from custom_logging import CustomFormatter as cf
+from logs.custom_logging import CustomFormatter as cf
 import urllib.parse as urlparse 
 
 
@@ -10,8 +11,26 @@ class Probe:
 
     def __init__(self, startup):
         self.__startup = startup
+        self.__xss_payload_list = None
+        self.__payloads = {}
         self.__response_codes = {status.value: status.phrase for status in http.HTTPStatus}
-        with open("xss-payload-list.txt") as f:
+
+        self.__get_xss_payloads()
+
+
+    def __get_sql_payloads(self):
+        sql_files = glob.glob("payloads/sql_payloads/*.txt")
+        for sql_file in sql_files:
+            with open(sql_file) as f:
+                payload_list = f.read().split("\n")
+                payload_list.pop()
+                _, file_name = os.path.split(sql_file)
+                payload_type = file_name.split(".")[0]
+                self.__sql_payloads[payload_type] = payload_list
+
+
+    def __get_xss_payloads(self):
+        with open("payloads/xss-payload-list.txt") as f:
             self.__xss_payload_list = f.read().split("\n")
             self.__xss_payload_list.pop()
 
