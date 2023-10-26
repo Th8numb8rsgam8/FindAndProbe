@@ -10,8 +10,8 @@ from utils.init_support import CustomProcess
 class Poller:
 
     def __init__(self, startup_info, connection):
-        self.__startup_info = startup_info
-        self.__connection = connection
+        self._startup_info = startup_info
+        self._connection = connection
 
 
     def run(self):
@@ -22,19 +22,19 @@ class Poller:
 
 
     def run_probe(self, link_data):
-        probe = Probe(self.__startup_info)
+        probe = Probe(self._startup_info)
         probe.probe_link(link_data)
 
 
-    def __probe_error(self, exc):
-        self.__startup_info.logger.critical(exc)
+    def _probe_error(self, exc):
+        self._startup_info.logger.critical(exc)
 
 
-    def __probe_finish(self, arg):
+    def _probe_finish(self, arg):
         cli_output.OK("FINISHED")
 
 
-    def __probe_pool_init(self):
+    def _probe_pool_init(self):
         signal.signal(signal.SIGINT, signal.SIG_IGN)
 
 
@@ -42,15 +42,15 @@ class Poller:
         available_cpus = len(os.sched_getaffinity(0))
         probes_pool = mp.Pool(
             processes=available_cpus,
-            initializer=self.__probe_pool_init)
+            initializer=self._probe_pool_init)
         while True:
-            if self.__connection.poll():
-                link_data = self.__connection.recv_bytes().decode('utf-8')
+            if self._connection.poll():
+                link_data = self._connection.recv_bytes().decode('utf-8')
                 link_data = json.loads(link_data)
                 probes_pool.apply_async(
                     func=self.run_probe, 
                     args=(link_data,),
-                    callback=self.__probe_finish,
-                    error_callback=self.__probe_error)
+                    callback=self._probe_finish,
+                    error_callback=self._probe_error)
         # probes_pool.close()
         # probes_pool.join()

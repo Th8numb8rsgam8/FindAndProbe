@@ -17,18 +17,18 @@ class CustomProcess(mp.Process):
 
     def __init__(self, my_func, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.__exec_func = my_func
+        self._exec_func = my_func
 
 
-    def __process_handler(self, sig, frame):
+    def _process_handler(self, sig, frame):
         raise SigExc
 
 
     def run(self):
-        signal.signal(signal.SIGINT, self.__process_handler)
+        signal.signal(signal.SIGINT, self._process_handler)
         while True:
             try:
-                self.__exec_func()
+                self._exec_func()
             except SigExc:
                 break
         cli_output.FATAL(f"\n{mp.current_process().name} EXITED\n")

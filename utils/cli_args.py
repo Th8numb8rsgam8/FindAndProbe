@@ -6,11 +6,11 @@ class CLIArgs:
     def __init__(self):
 
         # default CLI argument values
-        self.__default_req_timeout = 5.0
-        self.__default_req_delay = 3.0
+        self._default_req_timeout = 5.0
+        self._default_req_delay = 3.0
         self.argument_values = None
         http_status_list = list(http.HTTPStatus)
-        self.__http_status_vals = [status.value for status in http_status_list]
+        self._http_status_vals = [status.value for status in http_status_list]
 
 
     def collect_arguments(self):
@@ -31,13 +31,13 @@ class CLIArgs:
             "-t", "--request-timeout",
             dest="request_timeout",
             type=float, 
-            default=self.__default_req_timeout,
+            default=self._default_req_timeout,
             help="Time for client to wait between sending request & receiving response.")
         cli_parser.add_argument(
             "-d", "--request-delay",
             dest="request_delay",
             type=float, 
-            default=self.__default_req_delay,
+            default=self._default_req_delay,
             help="Time (in seconds) for client to wait before sending another request.")
         cli_parser.add_argument(
             "-c", "--ignore-codes",
@@ -45,7 +45,7 @@ class CLIArgs:
             dest="ignore_codes",
             type=int, 
             nargs="*",
-            choices=self.__http_status_vals,
+            choices=self._http_status_vals,
             help="HTTP response codes to ignore from probing target links.")
         cli_parser.add_argument("--version", action="version", version='%(prog)s 0.0.1')
         self.argument_values = vars(cli_parser.parse_args())
