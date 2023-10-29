@@ -69,7 +69,7 @@ class ProbeLogging(CustomFormatter):
         s, ms = divmod(record.relativeCreated, 1000)
         m, s = divmod(s, 60)
         h, m = divmod(m, 60)
-        record.relativeCreated = f"{h}:{m}:{s + round(ms/1000,3)}"
+        record.relativeCreated = f"{round(h)}:{round(m)}:{s + round(ms/1000,3)}"
         formatter = logging.Formatter(self.fmt, defaults=self.defaults)
         return formatter.format(record)
 

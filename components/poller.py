@@ -31,11 +31,12 @@ class Poller:
 
 
     def _probe_finish(self, arg):
-        cli_output.OK("FINISHED")
+        cli_output.OK("PROBING COMPLETE")
 
 
     def _probe_pool_init(self):
         signal.signal(signal.SIGINT, signal.SIG_IGN)
+        mp.current_process().name = "Probe"
 
 
     def poll_targets(self):
@@ -46,11 +47,14 @@ class Poller:
         while True:
             if self._connection.poll():
                 link_data = self._connection.recv_bytes().decode('utf-8')
-                link_data = json.loads(link_data)
-                probes_pool.apply_async(
-                    func=self.run_probe, 
-                    args=(link_data,),
-                    callback=self._probe_finish,
-                    error_callback=self._probe_error)
-        # probes_pool.close()
-        # probes_pool.join()
+                if link_data != "Finder Complete":
+                    link_data = json.loads(link_data)
+                    probes_pool.apply_async(
+                        func=self.run_probe, 
+                        args=(link_data,),
+                        callback=self._probe_finish,
+                        error_callback=self._probe_error)
+                else:
+                    break
+        probes_pool.close()
+        probes_pool.join()

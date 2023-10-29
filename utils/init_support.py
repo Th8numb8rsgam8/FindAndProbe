@@ -6,7 +6,8 @@ import multiprocessing as mp
 
 
 def signal_handler(sig, frame):
-    cli_output.FATAL(f"\n{mp.current_process().name} EXITED w/ {signal.strsignal(sig)}\n")
+    cli_output.FATAL(
+        f"\n{mp.current_process().name} EXITED w/ {signal.strsignal(sig)}\n")
 
 
 class SigExc(Exception):
@@ -26,9 +27,7 @@ class CustomProcess(mp.Process):
 
     def run(self):
         signal.signal(signal.SIGINT, self._process_handler)
-        while True:
-            try:
-                self._exec_func()
-            except SigExc:
-                break
-        cli_output.FATAL(f"\n{mp.current_process().name} EXITED\n")
+        try:
+            self._exec_func()
+        except SigExc:
+            cli_output.FATAL(f"\n{mp.current_process().name} EXITED\n")

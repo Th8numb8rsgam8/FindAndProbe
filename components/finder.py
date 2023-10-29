@@ -11,6 +11,7 @@ class Finder:
 
     def __init__(self, startup, connection, ignore_links=[]) -> None:
         self._startup = startup
+        self._hostname = urlparse.urlparse(self._startup.args["target_url"]).hostname
         self._connection = connection
         self._links_to_ignore = ignore_links
         self._response_data = {
@@ -39,7 +40,7 @@ class Finder:
     def _store_response_info(self, response) -> None:
         self._response_data["method"].append(response.request.method)
         self._response_data["path_url"].append(response.request.path_url)
-        self._response_data["url"].append(response.request.url)
+        # self._response_data["url"].append(response.request.url)
         self._response_data["request_headers"].append(response.request.headers)
         self._response_data["status_code"].append(response.status_code)
         self._response_data["reason"].append(response.reason)
@@ -53,14 +54,13 @@ class Finder:
 
     def _extract_links_from(self, url) -> list:
         try:
+            self._response_data["url"].append(url)
             response = self._startup.session.get(
                 url, 
                 timeout=self._startup.args["request_timeout"])
-
             response.raise_for_status()
             self._startup.logger.info(cf.GREEN + url + cf.RESET)
-            query = urlparse.urlparse(url).query
-            print(query)
+            # query = urlparse.urlparse(url).query
             to_probe = json.dumps({
                 "url": url, 
                 "response": response.text,
@@ -72,25 +72,25 @@ class Finder:
                 response.content.decode(errors="ignore"))
         except (
             exc.Timeout,
-            exc.HTTPError, 
-            exc.ReadTimeout, 
-            exc.ConnectionError, 
+            exc.HTTPError,
+            exc.ReadTimeout,
+            exc.ConnectionError,
             exc.TooManyRedirects,
             exc.RequestException) as e:
             self._startup.logger.warning(str(e) + " " + url)
-            return [] 
+            return []
 
 
     def _crawl(self, url=None) -> None:
-        if url == None:
-            url = self._startup.args["target_url"] 
-        href_links = self._extract_links_from(url)
+        tgt_url = url if url is not None else self._startup.args["target_url"]
+        href_links = self._extract_links_from(tgt_url)
         time.sleep(self._startup.args["request_delay"])
         for link in href_links:
-            link = urlparse.urljoin(url, link)
-            if "#" in link:
-                link = link.split("#")[0]
-            if self._startup.args["target_url"] in link \
+            link = urlparse.urljoin(tgt_url, link)
+            link, _ = urlparse.urldefrag(link)
+            if self._hostname in link \
                 and link not in self._response_data["url"] \
                 and link not in self._links_to_ignore:
                     self._crawl(link)
+        if url is None:
+            self._connection.send_bytes("Finder Complete".encode('utf-8'))
