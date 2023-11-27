@@ -7,6 +7,7 @@ import urllib.parse as urlparse
 from logs.custom_logging import CustomFormatter as cf
 from utils.init_support import CustomProcess 
 
+
 class Finder:
 
     def __init__(self, startup, connection, ignore_links=[]) -> None:
@@ -40,7 +41,6 @@ class Finder:
     def _store_response_info(self, response) -> None:
         self._response_data["method"].append(response.request.method)
         self._response_data["path_url"].append(response.request.path_url)
-        # self._response_data["url"].append(response.request.url)
         self._response_data["request_headers"].append(response.request.headers)
         self._response_data["status_code"].append(response.status_code)
         self._response_data["reason"].append(response.reason)

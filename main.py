@@ -1,14 +1,67 @@
 import pdb
 import json
 import signal
+import asyncio
+import websockets
 import platform
 import requests
 import multiprocessing as mp
 import logging.config
 from utils.cli_args import *
-from utils.init_support import signal_handler
+from http.server import HTTPServer, SimpleHTTPRequestHandler
+from utils.init_support import signal_handler, CustomProcess
 from components.finder import Finder
 from components.poller import Poller
+
+
+def run_http_server():
+    HOST_NAME = "192.168.192.131"
+    PORT = 8080
+    http_server = HTTPServer(
+        (HOST_NAME, PORT), 
+        FindAndProbeHandler)
+    http_server.serve_forever()
+
+
+async def run_websocket_server():
+    HOST_NAME = ""
+    PORT = 3000
+    async with websockets.serve(echo, HOST_NAME, PORT):
+        await asyncio.Future()
+
+
+async def echo(websocket, path):
+    websocket.debug = True
+    try:
+        while True:
+            await websocket.send("Find 'n Probe Server")
+            await asyncio.sleep(2)
+            # print(dir(websocket))
+            # print(len(websocket.messages))
+    except websockets.exceptions.ConnectionClosed:
+        print(websocket.close_reason)
+
+
+class FindAndProbeHandler(SimpleHTTPRequestHandler):
+
+    def do_GET(self):
+
+        path = self.path
+        if path == "/index.html":
+            mimetype = "text/html"
+        elif path == "/main_page.css":
+            mimetype = "text/css"
+        elif path == "/index.js":
+            mimetype = "text/javascript"
+        else:
+            path = "/index.html"
+            mimetype = "text/html"
+
+        self.send_response(200, "OK")
+        self.send_header("Content-Type", mimetype)
+        self.end_headers()
+        with open(path[1:], 'rb') as f:
+            self.wfile.write(f.read())
 
 
 class FindAndProbeInit:
@@ -38,11 +91,21 @@ if __name__ == "__main__":
         mp.set_start_method("spawn")
     startup_info = FindAndProbeInit()
 
-    finder_pipe, poller_pipe = mp.Pipe(duplex=True)
-    finder = Finder(startup_info, finder_pipe)
-    poller = Poller(startup_info, poller_pipe)
-    finder.run()
-    poller.run()
+    # finder_pipe, poller_pipe = mp.Pipe(duplex=True)
+    # finder = Finder(startup_info, finder_pipe)
+    # poller = Poller(startup_info, poller_pipe)
+    # finder.run()
+    # poller.run()
+
+    http_process = CustomProcess(
+        run_http_server,
+        name="HTTP Server")
+    http_process.start()
+
+    websocket_process = CustomProcess(
+        run_websocket_server,
+        name="WebSocket Server")
+    websocket_process.start()
 
 
 #     try:
