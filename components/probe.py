@@ -1,8 +1,6 @@
 import pdb
-import os
-import time 
-import http
-import glob
+import asyncio, websockets
+import os, time, http, glob, json
 import requests.exceptions as exc
 from bs4 import BeautifulSoup
 from logs.custom_logging import CustomFormatter as cf
@@ -22,7 +20,7 @@ class Probe:
 
 
     def _get_sql_payloads(self):
-        sql_files = glob.glob("payloads/sql_payloads/*.txt")
+        sql_files = glob.glob(os.path.join("payloads","sql_payloads","*.txt"))
         for sql_file in sql_files:
             with open(sql_file) as f:
                 payload_list = f.read().split("\n")
@@ -98,10 +96,6 @@ class Probe:
                                 "response": cf.CYAN + response + cf.RESET
                             })
                         return True
-                else:
-                    return False
-
-        return False
 
 
     def _xss_probe_form(self, form, url) -> bool:
@@ -119,6 +113,8 @@ class Probe:
                     response = " ".join(
                         [str(response.status_code), 
                         self._response_codes[response.status_code]])
+                    probe_data = {"payload": xss_payload, "response": response}
+                    asyncio.run(self._send_probe(json.dumps(probe_data)))
                     self._startup.logger.info(
                         f"SUCCESSFUL PROBE: {cf.BOLD + url + cf.RESET}", 
                         extra=
@@ -127,10 +123,12 @@ class Probe:
                             "response": cf.CYAN + response + cf.RESET
                         })
                     return True
-            else:
-                return False
 
-        return False
+
+    async def _send_probe(self, probe_data):
+        URL = "ws://192.168.192.131:3000"
+        async with websockets.connect(URL) as websocket:
+            await websocket.send(probe_data)
 
 
     def probe_link(self, link_data):

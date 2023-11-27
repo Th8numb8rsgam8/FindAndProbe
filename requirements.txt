@@ -4,11 +4,9 @@ certifi==2023.7.22
 charset-normalizer==3.3.0
 html5lib==1.1
 idna==3.4
-pip==23.2.1
+PySocks==1.7.1
 requests==2.31.0
-setuptools==68.0.0
 six==1.16.0
 soupsieve==2.5
 urllib3==2.0.5
-webencodings==0.5.1
-wheel==0.41.2
+websockets==12.0

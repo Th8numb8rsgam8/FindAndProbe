@@ -1,31 +1,9 @@
 import pdb
-import json
-import signal
-import platform
-import requests
+import signal, platform
 import multiprocessing as mp
-import logging.config
 from utils.cli_args import *
-from utils.init_support import signal_handler
-from components.finder import Finder
-from components.poller import Poller
-
-
-class FindAndProbeInit:
-
-    def __init__(self) -> None:
-        self.session = requests.Session()
-
-        # initialize CLI argument inputs
-        user_input = CLIArgs()
-        user_input.collect_arguments()
-        self.args = user_input.argument_values
-
-        # initialize logger
-        f = open("logs/logging_settings.json")
-        logging_configs = json.load(f)
-        logging.config.dictConfig(logging_configs)
-        self.logger = logging.getLogger()
+from utils.init_support import * 
+from components import finder, poller, servers
 
 
 if __name__ == "__main__":
@@ -39,10 +17,20 @@ if __name__ == "__main__":
     startup_info = FindAndProbeInit()
 
     finder_pipe, poller_pipe = mp.Pipe(duplex=True)
-    finder = Finder(startup_info, finder_pipe)
-    poller = Poller(startup_info, poller_pipe)
+    finder = finder.Finder(startup_info, finder_pipe)
+    poller = poller.Poller(startup_info, poller_pipe)
     finder.run()
     poller.run()
+
+    http_process = CustomProcess(
+        servers.run_http_server,
+        name="HTTP Server")
+    http_process.start()
+
+    websocket_process = CustomProcess(
+        servers.run_websocket_server,
+        name="WebSocket Server")
+    websocket_process.start()
 
 
 #     try:
