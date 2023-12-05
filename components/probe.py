@@ -98,10 +98,6 @@ class Probe:
                                 "response": cf.CYAN + response + cf.RESET
                             })
                         return True
-                else:
-                    return False
-
-        return False
 
 
     def _xss_probe_form(self, form, url) -> bool:
@@ -127,10 +123,6 @@ class Probe:
                             "response": cf.CYAN + response + cf.RESET
                         })
                     return True
-            else:
-                return False
-
-        return False
 
 
     def probe_link(self, link_data):

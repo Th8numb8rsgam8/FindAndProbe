@@ -2,6 +2,8 @@ import pdb
 import re
 import json
 import time 
+import asyncio
+import websockets
 import requests.exceptions as exc
 import urllib.parse as urlparse
 from logs.custom_logging import CustomFormatter as cf
@@ -52,6 +54,12 @@ class Finder:
         self._response_data["elapsed_time"].append(response.elapsed.total_seconds())
 
 
+    async def _send_finder(self, link_data):
+        URL = "ws://192.168.192.131:3000"
+        async with websockets.connect(URL) as websocket:
+            await websocket.send(link_data)
+
+
     def _extract_links_from(self, url) -> list:
         try:
             self._response_data["url"].append(url)
@@ -66,6 +74,7 @@ class Finder:
                 "response": response.text,
                 "status_code": response.status_code})
             self._connection.send_bytes(to_probe.encode('utf-8'))
+            asyncio.run(self._send_finder(to_probe))
             self._store_response_info(response)
             return re.findall(
                 '(?:href=")(.*?)"',

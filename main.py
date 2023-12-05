@@ -30,12 +30,19 @@ async def run_websocket_server():
         await asyncio.Future()
 
 
+connected = set()
 async def echo(websocket, path):
-    websocket.debug = True
+    # websocket.debug = True
     try:
         while True:
-            await websocket.send("Find 'n Probe Server")
-            await asyncio.sleep(2)
+            link_data = await websocket.recv()
+            if link_data == "BROWSER":
+                connected.add(websocket)
+                # browser_websocket = websocket
+            else:
+                for conn in connected: 
+                    await conn.send(link_data)
+            # await asyncio.sleep(2)
             # print(dir(websocket))
             # print(len(websocket.messages))
     except websockets.exceptions.ConnectionClosed:
@@ -91,11 +98,11 @@ if __name__ == "__main__":
         mp.set_start_method("spawn")
     startup_info = FindAndProbeInit()
 
-    # finder_pipe, poller_pipe = mp.Pipe(duplex=True)
-    # finder = Finder(startup_info, finder_pipe)
-    # poller = Poller(startup_info, poller_pipe)
-    # finder.run()
-    # poller.run()
+    finder_pipe, poller_pipe = mp.Pipe(duplex=True)
+    finder = Finder(startup_info, finder_pipe)
+    poller = Poller(startup_info, poller_pipe)
+    finder.run()
+    poller.run()
 
     http_process = CustomProcess(
         run_http_server,

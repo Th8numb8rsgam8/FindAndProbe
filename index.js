@@ -1,31 +1,31 @@
 (function() {
 
-"use strict";
+	"use strict";
 
-window.addEventListener("DOMContentLoaded", () =>
-{
-	const socket = new WebSocket("ws://192.168.192.131:3000/");
-
-	// socket.addEventListener("open", function (event)
-	// {
-	// 	socket.send("CONNECTION ESTABLISHED");
-	// });
-	
-	// setInterval(() =>
-	// {
-	// 	socket.send("CONNECTION ESTABLISHED");	
-
-	// }, 1000);
-	
-	socket.addEventListener("close", function (event)
+	window.addEventListener("DOMContentLoaded", () =>
 	{
-		console.log("CONNECTION CLOSED");
-	});
+		const socket = new WebSocket("ws://192.168.192.131:3000/");
 
-	socket.addEventListener("message", function (event)
-	{
-		console.log(event.data);
-	});
-	console.log(socket);
-}, false);
+		socket.addEventListener("open", function (event)
+		{
+			socket.send("BROWSER");
+		});
+		
+		// setInterval(() =>
+		// {
+		// 	socket.send("CONNECTION ESTABLISHED");	
+
+		// }, 1000);
+		
+		socket.addEventListener("close", function (event)
+		{
+			console.log("CONNECTION CLOSED");
+		});
+
+		socket.addEventListener("message", function (event)
+		{
+			console.log(JSON.parse(event.data).url);
+		});
+		console.log(socket);
+	}, false);
 })();
