@@ -1,7 +1,9 @@
 import pdb
-import sys
-import signal
-import asyncio
+import os, json
+import requests
+from utils.cli_args import CLIArgs as CLI
+import sys, signal, asyncio
+import logging.config
 from logs.custom_logging import cli_output
 import multiprocessing as mp
 
@@ -13,6 +15,29 @@ def signal_handler(sig, frame):
 
 class SigExc(Exception):
     pass
+
+
+class FindAndProbeInit:
+
+    def __init__(self) -> None:
+        self.session = requests.Session()
+
+        # initialize CLI argument inputs
+        user_input = CLI()
+        user_input.collect_arguments()
+        self.args = user_input.argument_values
+
+        # initialize logger
+        # os.chdir(os.path.join("..", os.getcwd(), "logs", "logging_settings.json"))
+        f = open(os.path.join(
+                "..",
+                os.getcwd(),
+                "logs",
+                "logging_settings.json"))
+        # f = open("../logs/logging_settings.json")
+        logging_configs = json.load(f)
+        logging.config.dictConfig(logging_configs)
+        self.logger = logging.getLogger()
 
 
 class CustomProcess(mp.Process):

@@ -24,8 +24,7 @@
 
 		socket.addEventListener("message", function (event)
 		{
-			console.log(JSON.parse(event.data).url);
+			console.log(JSON.parse(event.data));
 		});
-		console.log(socket);
 	}, false);
 })();

@@ -1,9 +1,6 @@
 import pdb
-import re
-import json
-import time 
-import asyncio
-import websockets
+import re, json, time
+import asyncio, websockets
 import requests.exceptions as exc
 import urllib.parse as urlparse
 from logs.custom_logging import CustomFormatter as cf
@@ -53,6 +50,45 @@ class Finder:
         self._response_data["history"].append(response.history)
         self._response_data["elapsed_time"].append(response.elapsed.total_seconds())
 
+        response_record = {
+            "request_headers":{},
+            "response_headers": {},
+            "cookies": []
+        }
+        response_record["method"] = response.request.method
+        response_record["path_url"] = response.request.path_url
+        for name, val in response.request.headers.items():
+            response_record["request_headers"][name] =val
+        response_record["status_code"] = response.status_code
+        response_record["reason"] = response.reason
+        for name, val in response.headers.items():
+            response_record["response_headers"][name] = val
+        response_record["apparent_encoding"] = response.apparent_encoding
+        for cookie in response.cookies:
+            response_record["cookies"].append({
+                "comment": cookie.comment,
+                "comment_url": cookie.comment_url,
+                "discard": cookie.discard,
+                "domain": cookie.domain,
+                "domain_initial_dot": cookie.domain_initial_dot,
+                "domain_speficied": cookie.domain_specified,
+                "expires": cookie.expires,
+                "nonstandard_attr": cookie.get_nonstandard_attr(cookie.name),
+                "has_nonstandard_attr": cookie.has_nonstandard_attr(cookie.name),
+                "is_expired": cookie.is_expired(),
+                "name": cookie.name,
+                "path": cookie.path,
+                "path_specified": cookie.path_specified,
+                "port": cookie.port,
+                "port_specified": cookie.port_specified,
+                "rfc2109": cookie.rfc2109,
+                "secure": cookie.secure,
+                "value": cookie.value,
+                "version": cookie.version})
+        response_record["content"] = response.text
+        response_record["elapsed_time"] = response.elapsed.total_seconds()
+        asyncio.run(self._send_finder(json.dumps(response_record)))
+
 
     async def _send_finder(self, link_data):
         URL = "ws://192.168.192.131:3000"
@@ -74,7 +110,6 @@ class Finder:
                 "response": response.text,
                 "status_code": response.status_code})
             self._connection.send_bytes(to_probe.encode('utf-8'))
-            asyncio.run(self._send_finder(to_probe))
             self._store_response_info(response)
             return re.findall(
                 '(?:href=")(.*?)"',
