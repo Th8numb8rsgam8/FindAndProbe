@@ -3,7 +3,8 @@ import signal, platform
 import multiprocessing as mp
 from utils.cli_args import *
 from utils.init_support import * 
-from components import finder, poller, servers
+from components import finder, poller
+from components.servers import FindAndProbeHTTPServer, WebSocketServer
 
 
 if __name__ == "__main__":
@@ -16,35 +17,16 @@ if __name__ == "__main__":
         mp.set_start_method("spawn")
     startup_info = FindAndProbeInit()
 
+    HOST_NAME = "192.168.192.131"
+    PORT = 8080
+
+    http_server = FindAndProbeHTTPServer(HOST_NAME, PORT)
+    http_server.run()
+    websocket_server = WebSocketServer()
+    websocket_server.run()
+
     finder_pipe, poller_pipe = mp.Pipe(duplex=True)
     finder = finder.Finder(startup_info, finder_pipe)
     poller = poller.Poller(startup_info, poller_pipe)
     finder.run()
     poller.run()
-
-    http_process = CustomProcess(
-        servers.run_http_server,
-        name="HTTP Server")
-    http_process.start()
-
-    websocket_process = CustomProcess(
-        servers.run_websocket_server,
-        name="WebSocket Server")
-    websocket_process.start()
-
-
-#     try:
-#         with open(wordlist) as file:
-#             for line in file:
-#                 word = line.strip()
-#                 test_url = target_url + "/" + word
-#                 response = request(test_url)
-#                 time.sleep(1/3)
-#                 if response:
-#                     print("\033[1;32;40m [+] Discovered directory --> " + test_url + "\033[0;0m")
-#                 else:
-#                     print("\033[0;31;40m [-] Not valid endpoint --> " + test_url + "\033[0;0m")
-# 
-#     except KeyboardInterrupt:
-# 
-#         print("Program ended")

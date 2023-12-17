@@ -51,6 +51,7 @@ class Finder:
         self._response_data["elapsed_time"].append(response.elapsed.total_seconds())
 
         response_record = {
+            "sender": "Finder",
             "request_headers":{},
             "response_headers": {},
             "cookies": []

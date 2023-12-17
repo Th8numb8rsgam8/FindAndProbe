@@ -5,17 +5,10 @@
 	window.addEventListener("DOMContentLoaded", () =>
 	{
 		const socket = new WebSocket("ws://192.168.192.131:3000/");
-
 		socket.addEventListener("open", function (event)
 		{
 			socket.send("BROWSER");
 		});
-		
-		// setInterval(() =>
-		// {
-		// 	socket.send("CONNECTION ESTABLISHED");	
-
-		// }, 1000);
 		
 		socket.addEventListener("close", function (event)
 		{
@@ -24,7 +17,16 @@
 
 		socket.addEventListener("message", function (event)
 		{
-			console.log(JSON.parse(event.data));
+			const link_data = JSON.parse(event.data);
+			switch (link_data.sender)
+			{
+				case "Finder":
+					console.log("FINDER");
+					break;
+				case "Probe":
+					console.log("PROBE");
+					break;
+			}
 		});
 	}, false);
 })();

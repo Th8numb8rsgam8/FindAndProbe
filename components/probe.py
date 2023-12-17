@@ -113,7 +113,11 @@ class Probe:
                     response = " ".join(
                         [str(response.status_code), 
                         self._response_codes[response.status_code]])
-                    probe_data = {"payload": xss_payload, "response": response}
+                    probe_data = {
+                        "sender": "Probe",
+                        "target": url,
+                        "payload": xss_payload, 
+                        "response": response}
                     asyncio.run(self._send_probe(json.dumps(probe_data)))
                     self._startup.logger.info(
                         f"SUCCESSFUL PROBE: {cf.BOLD + url + cf.RESET}", 

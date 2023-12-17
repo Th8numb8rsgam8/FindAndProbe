@@ -28,13 +28,11 @@ class FindAndProbeInit:
         self.args = user_input.argument_values
 
         # initialize logger
-        # os.chdir(os.path.join("..", os.getcwd(), "logs", "logging_settings.json"))
         f = open(os.path.join(
-                "..",
-                os.getcwd(),
-                "logs",
-                "logging_settings.json"))
-        # f = open("../logs/logging_settings.json")
+            "..",
+            os.getcwd(),
+            "logs",
+            "logging_settings.json"))
         logging_configs = json.load(f)
         logging.config.dictConfig(logging_configs)
         self.logger = logging.getLogger()
