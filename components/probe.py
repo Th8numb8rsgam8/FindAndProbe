@@ -113,7 +113,12 @@ class Probe:
                     response = " ".join(
                         [str(response.status_code), 
                         self._response_codes[response.status_code]])
-                    probe_data = {"payload": xss_payload, "response": response}
+                    probe_data = {
+                        "sender": "Probe",
+                        "target": url,
+                        "probe_type": "XSS",
+                        "payload": xss_payload, 
+                        "response": response}
                     asyncio.run(self._send_probe(json.dumps(probe_data)))
                     self._startup.logger.info(
                         f"SUCCESSFUL PROBE: {cf.BOLD + url + cf.RESET}", 
@@ -126,7 +131,7 @@ class Probe:
 
 
     async def _send_probe(self, probe_data):
-        URL = "ws://192.168.192.131:3000"
+        URL = f"ws://{self._startup.WEBSOCKETS_IP}:{self._startup.WEBSOCKETS_PORT}"
         async with websockets.connect(URL) as websocket:
             await websocket.send(probe_data)
 

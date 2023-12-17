@@ -21,6 +21,7 @@ class FindAndProbeInit:
 
     def __init__(self) -> None:
         self.session = requests.Session()
+        self.WEBSOCKETS_IP, self.WEBSOCKETS_PORT = ("localhost", 3000)
 
         # initialize CLI argument inputs
         user_input = CLI()
@@ -28,13 +29,11 @@ class FindAndProbeInit:
         self.args = user_input.argument_values
 
         # initialize logger
-        # os.chdir(os.path.join("..", os.getcwd(), "logs", "logging_settings.json"))
         f = open(os.path.join(
-                "..",
-                os.getcwd(),
-                "logs",
-                "logging_settings.json"))
-        # f = open("../logs/logging_settings.json")
+            "..",
+            os.getcwd(),
+            "logs",
+            "logging_settings.json"))
         logging_configs = json.load(f)
         logging.config.dictConfig(logging_configs)
         self.logger = logging.getLogger()

@@ -1,0 +1,319 @@
+@import url(https://fonts.googleapis.com/css?family=Open+Sans:400,700);
+
+/* colors */
+$blue:rgba(79,192,210,1);
+$green:rgba(82,210,154,1);
+$yellow:rgba(231,196,104,0.7);
+$orange:rgba(235,118,85,1);
+$dark-bg:rgba(0,0,0,0.9);
+$light-bg:rgba(255,255,255,0.1);
+$text:rgba(255,255,255,0.9);
+$subtle:#54a1a0;
+$poppy:#BD2A4E;
+
+body {
+	background: $dark-bg;
+	font-family: 'Open Sans', sans-serif;
+}
+
+a {
+	text-decoration: none;
+	transition: color 0.2s ease-out;
+}
+
+.wrapper {
+	/** width: 100%; **/
+	/** max-width: 1000px; **/
+	margin: 20px auto 100px auto;
+	padding: 0;
+	background: $light-bg;
+	color: $text;
+	/** overflow: hidden; **/
+	position: relative;
+}
+
+.row {
+	margin: 0;
+	padding: 0;
+	display: flex;
+}
+
+.row th,
+.row td {
+	margin: 0;
+	font-size: 16px;
+	font-weight: normal;
+	list-style: none;
+	display: inline-block;
+	width: 200px;
+    overflow: hidden;
+	box-sizing: border-box;
+	padding: 5px 30px;
+    text-align: center;
+}
+
+.row {
+	padding: 20px 0;
+	height: 30px;
+	font-size: 0;
+	position: relative;
+	overflow: hidden;
+	transition: all 0.2s ease-out;
+	border-top: 1px solid darken($light-bg, 100%);
+}
+
+.row:hover {
+	background-color: lighten($dark-bg, 10%);
+	height: 65px;
+}
+
+.row .select {
+  padding: 10px 0px;
+}
+
+.probed {
+  border-left: 3px solid darken($orange, 30%);
+}
+
+.probed:hover {
+  border-left: 3px solid $orange;
+}
+
+.title {
+	padding: 25px 0 5px 0;
+	height: 45px;
+	font-size: 0;
+	background-color: $light-bg;
+	border-left: 3px solid lighten($light-bg, 100%);
+}
+
+.title:hover {
+	height: 45px;
+	background-color: $light-bg;
+	border-left: 3px solid lighten($light-bg, 100%);
+}
+
+.row-fadeIn-wrapper {
+	opacity: 0;
+	font-size: 0;
+	height: 0;
+	overflow: hidden;
+	position: relative;
+	transition: all 0.2s ease-out;
+	animation: fadeIn 0.4s ease-out 2s 1 alternate;
+	animation-fill-mode: forwards;
+}
+
+.row-fadeIn-wrapper:hover {
+	height: 35px;
+}
+
+.fadeIn {
+	padding: 20px 0;
+	font-size: 0;
+	position: absolute;
+	transition: all 0.2s ease-out;
+	width: 100%;
+}
+
+.fadeIn:hover {
+	background-color: lighten($dark-bg, 10%);
+}
+
+.row-fadeOut-wrapper {
+	font-size: 0;
+	overflow: hidden;
+	position: relative;
+	transition: all 0.2s ease-out;
+	animation: fadeOut 0.4s ease-out 8s 1 alternate;
+	animation-fill-mode: forwards;
+	opacity: 1;
+	height: 65px;
+}
+
+.row-fadeOut-wrapper:hover {
+	height: 100px;
+}
+
+.update-row {
+	animation: update 0.5s ease-out 12s 1 alternate;
+}
+
+.update1 {
+	position: absolute;
+	top: 25px;
+	display: inline-block;
+	opacity: 1;
+	animation: update1 1s ease-out 12s 1 alternate;
+	animation-fill-mode: forwards;
+}
+
+.update2 {
+	position: absolute;
+	top: 25px;
+	display: inline-block;
+	opacity: 0;
+	animation: update2 4s ease-out 13s 1 alternate;
+	animation-fill-mode: forwards;
+}
+
+tr.more-content {
+  position: absolute;
+  left: 0px;
+  top: 60px;
+}
+
+tr.more-content td {
+	position: relative;
+	font-size: 13px;
+	margin: 0;
+	padding: 10px 13px;
+	display: block;
+	height: 50px;
+	width: 100%;
+	color: darken($text,50%);
+}
+
+.small {		
+	color: darken($text,60%);	
+	font-size: 10px;
+	padding: 0 10px;
+	margin: 0;
+}
+
+@keyframes fadeIn {
+	from {
+		background: $light-bg;
+		opacity: 0;
+		padding: 0;
+	}
+	to {
+		background: darken($light-bg,80%);
+		opacity: 1;
+		padding: 0 0 65px 0;
+	}
+}
+
+@keyframes fadeOut {
+	from {
+		background: darken($light-bg,80%);
+		opacity: 1;
+		height: 65px;
+	}
+	to {
+		background: $light-bg;
+		opacity: 0;
+		height: 0;
+	}
+}
+
+@keyframes update {
+	0% {
+		background: darken($light-bg,80%);
+	}
+	50% {
+		background: $light-bg;
+	}
+	100% {
+		background: darken($light-bg,80%);
+	}
+}
+
+@keyframes update1 {
+	0% {opacity: 0;}
+	0% {opacity: 1;}
+	100% {opacity: 0;}
+}
+
+@keyframes update2 {
+	0% {
+		opacity: 0;
+		color: $text;
+	}
+	20% {
+		opacity: 1;
+		color: $green;
+	}
+	100% {
+		opacity: 1;
+		color: $text;
+	}
+}
+
+.button {
+  cursor: pointer;
+  text-decoration: none;
+  border-radius: 5px;
+  color: #fff;
+  padding: 8px;
+  background-color: darken($subtle, 5%);
+}
+
+#detail {
+  background-color: $poppy;
+  width: 100%;
+  height: 100%;
+  padding: 40px 0;
+  position: fixed;
+  top: 0;
+  left: 0;
+  overflow: auto;
+  transform: translateX(-100%);
+  transition: all .3s ease-out;
+  &.open {
+    transform: translateX(0);
+  }
+}
+
+#detail-container dl {
+  position: fixed;
+  margin-left: 12%;
+  visibility: hidden;
+  z-index: -5;
+  &.open {
+    visibility: visible;
+    z-index: 5;
+  }
+}
+
+.detail-nav {
+  z-index: 1000;
+  position: sticky;
+  margin-left: 2%;
+  top: 20px;
+}
+
+.close {
+  cursor: pointer;
+  background: none;
+  padding: 18px;
+  color: #fff;
+  font-weight: 300;
+  border: 1px solid rgba(255,255,255,.4);
+  border-radius: 4px;
+  line-height: 1;
+  font-size: 1.8rem;
+  transition: all .3s ease-out;
+  &:hover, &:focus {
+    background-color: darken($poppy,5%);
+    border: 1px solid darken($poppy,5%);
+  }
+}
+
+dl {
+  margin: 0;
+  padding: 0;
+}
+
+dt {
+  font-size: 2.2rem;
+  font-weight: 300;
+}
+
+dd {
+  margin: 0 0 40px 0;
+  font-size: 1.8rem;
+  padding-bottom: 5px;
+  border-bottom: 1px solid darken($poppy, 4%);
+  box-shadow: 0 1px 0 lighten($poppy, 2%);
+}

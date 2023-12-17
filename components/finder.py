@@ -51,19 +51,25 @@ class Finder:
         self._response_data["elapsed_time"].append(response.elapsed.total_seconds())
 
         response_record = {
+            "sender": "Finder",
             "request_headers":{},
             "response_headers": {},
             "cookies": []
         }
+        query_string = urlparse.urlparse(response.url).query
+        query_dict = urlparse.parse_qs(query_string, keep_blank_values=True)
+        response_record["url"] = response.url
         response_record["method"] = response.request.method
         response_record["path_url"] = response.request.path_url
-        for name, val in response.request.headers.items():
-            response_record["request_headers"][name] =val
         response_record["status_code"] = response.status_code
         response_record["reason"] = response.reason
+        response_record["apparent_encoding"] = response.apparent_encoding
+        response_record["elapsed_time"] = response.elapsed.total_seconds()
+        response_record["query_parameters"] = query_dict
+        for name, val in response.request.headers.items():
+            response_record["request_headers"][name] = val
         for name, val in response.headers.items():
             response_record["response_headers"][name] = val
-        response_record["apparent_encoding"] = response.apparent_encoding
         for cookie in response.cookies:
             response_record["cookies"].append({
                 "comment": cookie.comment,
@@ -85,13 +91,11 @@ class Finder:
                 "secure": cookie.secure,
                 "value": cookie.value,
                 "version": cookie.version})
-        response_record["content"] = response.text
-        response_record["elapsed_time"] = response.elapsed.total_seconds()
         asyncio.run(self._send_finder(json.dumps(response_record)))
 
 
     async def _send_finder(self, link_data):
-        URL = "ws://192.168.192.131:3000"
+        URL = f"ws://{self._startup.WEBSOCKETS_IP}:{self._startup.WEBSOCKETS_PORT}"
         async with websockets.connect(URL) as websocket:
             await websocket.send(link_data)
 
@@ -104,7 +108,6 @@ class Finder:
                 timeout=self._startup.args["request_timeout"])
             response.raise_for_status()
             self._startup.logger.info(cf.GREEN + url + cf.RESET)
-            # query = urlparse.urlparse(url).query
             to_probe = json.dumps({
                 "url": url, 
                 "response": response.text,
