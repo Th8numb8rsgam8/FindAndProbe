@@ -72,7 +72,7 @@ class FindAndProbeHandler(SimpleHTTPRequestHandler):
         path = self.path
         if path == "/index.html":
             mimetype = "text/html"
-        elif path == "/table_format.css":
+        elif path == "/table_format.scss":
             mimetype = "text/css"
         elif path == "/index.js":
             mimetype = "text/javascript"
