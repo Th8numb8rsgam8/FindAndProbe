@@ -1,3 +1,5 @@
+@import url(https://fonts.googleapis.com/css?family=Open+Sans:400,700);
+
 /* colors */
 $blue:rgba(79,192,210,1);
 $green:rgba(82,210,154,1);
@@ -7,44 +9,55 @@ $dark-bg:rgba(0,0,0,0.9);
 $light-bg:rgba(255,255,255,0.1);
 $text:rgba(255,255,255,0.9);
 
+body {
+	background: $dark-bg;
+	font-family: 'Open Sans', sans-serif;
+}
+
 a {
 	text-decoration: none;
 	transition: color 0.2s ease-out;
 }
 
 .wrapper {
-	width: 100%;
-	max-width: 1000px;
+	/** width: 100%; **/
+	/** max-width: 1000px; **/
 	margin: 20px auto 100px auto;
 	padding: 0;
 	background: $light-bg;
 	color: $text;
-	overflow: hidden;
+	/** overflow: hidden; **/
 	position: relative;
 }
 
-.row ul {
+//.row ul,
+.row {
 	margin: 0;
 	padding: 0;
+	display: flex;
 }
 
-.row ul li {
+//.row ul li 
+.row th,
+.row td {
 	margin: 0;
 	font-size: 16px;
 	font-weight: normal;
 	list-style: none;
 	display: inline-block;
-	width: 20%;
+	width: auto;
+    overflow: hidden;
 	box-sizing: border-box;
+	padding: 5px 30px;
+    text-align: center;
 }
 
-.title ul li {
-	padding: 15px 13px;
+.row td:hover {
+  overflow: visible;
+  cursor: pointer;
 }
 
-.row ul li {
-	padding: 5px 10px;
-}
+//.title ul li 
 
 .row {
 	padding: 20px 0;
@@ -66,7 +79,7 @@ a {
 	height: 45px;
 	font-size: 0;
 	background-color: $light-bg;
-	border-left: 3px solid lieghten($light-bg, 100%);
+	border-left: 3px solid lighten($light-bg, 100%);
 }
 
 .title:hover {
@@ -152,7 +165,7 @@ ul.more-content li {
 }
 
 .small {		
-	color: darken($atext,60%);	
+	color: darken($text,60%);	
 	font-size: 10px;
 	padding: 0 10px;
 	margin: 0;
@@ -192,7 +205,7 @@ ul.more-content li {
 		background: $light-bg;
 	}
 	100% {
-		background: darken(%light-bg,80%);
+		background: darken($light-bg,80%);
 	}
 }
 

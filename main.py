@@ -4,7 +4,7 @@ import multiprocessing as mp
 from utils.cli_args import *
 from utils.init_support import * 
 from components import finder, poller
-from components.servers import FindAndProbeHTTPServer, WebSocketServer
+from components.servers import *
 
 
 if __name__ == "__main__":
@@ -20,7 +20,9 @@ if __name__ == "__main__":
     HOST_NAME = "192.168.192.131"
     PORT = 8080
 
-    http_server = FindAndProbeHTTPServer(HOST_NAME, PORT)
+    http_server = FindAndProbeHTTPServer(
+        (HOST_NAME, PORT), 
+        FindAndProbeHandler)
     http_server.run()
     websocket_server = WebSocketServer()
     websocket_server.run()

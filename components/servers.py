@@ -1,3 +1,4 @@
+import sass, os
 import websockets, asyncio
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 from utils.init_support import CustomProcess
@@ -44,25 +45,20 @@ class WebSocketServer:
             print(websocket.close_reason)
 
 
-class FindAndProbeHTTPServer:
+class FindAndProbeHTTPServer(HTTPServer):
 
-    def __init__(self, host, port):
-        self._host_port = (host, port)
+    def __init__(self, *args, **kwargs):
+
+        super().__init__(*args, **kwargs)
         self._name = "HTTP Server"
+        self.frontend_dir = "frontend"
 
 
     def run(self):
         http_process = CustomProcess(
-            self._run_http_server,
+            super().serve_forever,
             name=self._name)
         http_process.start()
-
-
-    def _run_http_server(self):
-        http_server = HTTPServer(
-            self._host_port,
-            FindAndProbeHandler)
-        http_server.serve_forever()
 
 
 class FindAndProbeHandler(SimpleHTTPRequestHandler):
@@ -83,5 +79,12 @@ class FindAndProbeHandler(SimpleHTTPRequestHandler):
         self.send_response(200, "OK")
         self.send_header("Content-Type", mimetype)
         self.end_headers()
-        with open(path[1:], 'rb') as f:
-            self.wfile.write(f.read())
+
+        if path == "/table_format.scss":
+            css_string = sass.compile(
+                filename=os.path.join(self.server.frontend_dir, path[1:]))
+            self.wfile.write(css_string.encode("utf-8"))
+        else:
+            with open(os.path.join(
+                self.server.frontend_dir, path[1:]), 'rb') as f:
+                self.wfile.write(f.read())
