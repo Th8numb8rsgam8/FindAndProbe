@@ -4,6 +4,11 @@
 
 	window.addEventListener("DOMContentLoaded", () =>
 	{
+		$(".close").on("click", function(e) {
+			e.preventDefault();
+			$(".detail, html, body").toggleClass("open");
+		});
+
 		HandleUpdates();
 	}, false);
 
@@ -57,12 +62,16 @@
 					});
 					const data_column = document.createElement("td");
 					const select_btn = document.createElement("a");
-					data_column.classList.add("select");
-					select_btn.classList.add("button");
+					data_column.classList.add("select", `row_${row_number}`);
+					select_btn.classList.add("button", `row_${row_number}`);
 					select_btn.innerHTML = "Select";
 					data_column.appendChild(select_btn);
 					data_row.appendChild(data_column);
 					data_table.appendChild(data_row);
+					$(`.button.row_${row_number}`).on("click", function(e) {
+						e.preventDefault();
+						$(".detail, html, body").toggleClass("open");
+					});
 					break;
 				case "Probe":
 					// console.log(Object.keys(link_data));
