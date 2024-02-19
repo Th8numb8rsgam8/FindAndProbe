@@ -34,6 +34,7 @@ class WebSocketServer:
                 link_data = await websocket.recv()
                 if link_data == "BROWSER":
                     self._connected.add(websocket)
+                    print("LENGTH " + str(len(self._connected)))
                     # browser_websocket = websocket
                 else:
                     for conn in self._connected: 
