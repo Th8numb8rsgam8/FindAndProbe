@@ -49,7 +49,7 @@
 			const link_data = JSON.parse(event.data);
 			row_number += 1;
 			const data_row = document.createElement("tr");
-			data_row.classList.add("row", `row_${row_number}`);
+			data_row.classList.add("row", `row_${row_number}`, link_data["url"]);
 			switch (link_data.sender)
 			{
 				case "Finder":
@@ -65,6 +65,7 @@
 							const a = document.createElement("a");
 							a.innerHTML = link_data[name];
 							a.setAttribute("href", link_data[name]);
+							a.setAttribute("target", "_blank");
 							data_column.appendChild(a);
 						}
 						else
@@ -75,7 +76,7 @@
 					});
 
 					const detail_content = document.createElement("dl");
-					detail_content.classList.add(`row_${row_number}`);
+					detail_content.classList.add(`row_${row_number}`, link_data["url"]);
 
 					["request_headers", "response_headers"].forEach((hdr) =>
 					{

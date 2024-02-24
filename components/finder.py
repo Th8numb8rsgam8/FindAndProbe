@@ -56,6 +56,8 @@ class Finder:
             "response_headers": {},
             "cookies": []
         }
+        query_string = urlparse.urlparse(response.url).query
+        query_dict = urlparse.parse_qs(query_string, keep_blank_values=True)
         response_record["url"] = response.url
         response_record["method"] = response.request.method
         response_record["path_url"] = response.request.path_url
@@ -63,6 +65,7 @@ class Finder:
         response_record["reason"] = response.reason
         response_record["apparent_encoding"] = response.apparent_encoding
         response_record["elapsed_time"] = response.elapsed.total_seconds()
+        response_record["query_parameters"] = query_dict
         for name, val in response.request.headers.items():
             response_record["request_headers"][name] = val
         for name, val in response.headers.items():
@@ -106,7 +109,6 @@ class Finder:
                 timeout=self._startup.args["request_timeout"])
             response.raise_for_status()
             self._startup.logger.info(cf.GREEN + url + cf.RESET)
-            # query = urlparse.urlparse(url).query
             to_probe = json.dumps({
                 "url": url, 
                 "response": response.text,
