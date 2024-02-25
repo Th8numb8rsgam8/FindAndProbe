@@ -116,6 +116,7 @@ class Probe:
                     probe_data = {
                         "sender": "Probe",
                         "target": url,
+                        "probe_type": "XSS",
                         "payload": xss_payload, 
                         "response": response}
                     asyncio.run(self._send_probe(json.dumps(probe_data)))

@@ -133,7 +133,14 @@
 					selectListener(row_number);
 					break;
 				case "Probe":
-					// console.log(Object.keys(link_data));
+					const tgt_info = document.getElementsByClassName(`${link_data["target"]}`);
+					tgt_info[0].classList.add("probed");
+					const probe_details = document.createElement("tr");
+					probe_details.classList.add("more-content");
+					const probe_item = document.createElement("td");
+					probe_item.innerHTML = link_data["probe_type"];
+					probe_details.appendChild(probe_item);
+					tgt_info[0].appendChild(probe_details);
 					break;
 			}
 		});

@@ -71,6 +71,14 @@ a {
   padding: 10px 0px;
 }
 
+.probed {
+  border-left: 3px solid darken($orange, 30%);
+}
+
+.probed:hover {
+  border-left: 3px solid $orange;
+}
+
 .title {
 	padding: 25px 0 5px 0;
 	height: 45px;
@@ -149,9 +157,14 @@ a {
 	animation-fill-mode: forwards;
 }
 
-ul.more-content li {
+tr.more-content {
+  position: absolute;
+  left: 0px;
+  top: 60px;
+}
+
+tr.more-content td {
 	position: relative;
-	top: 22px;
 	font-size: 13px;
 	margin: 0;
 	padding: 10px 13px;
