@@ -21,6 +21,7 @@ class FindAndProbeInit:
 
     def __init__(self) -> None:
         self.session = requests.Session()
+        self.WEBSOCKETS_IP, self.WEBSOCKETS_PORT = ("localhost", 3000)
 
         # initialize CLI argument inputs
         user_input = CLI()

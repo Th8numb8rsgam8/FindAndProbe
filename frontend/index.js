@@ -9,11 +9,30 @@
 			$("#detail, html, body").toggleClass("open");
 		});
 
-		HandleUpdates();
+		getWebSocketsEndpoint()
+			.then(endpoint => { HandleUpdates(endpoint); })
+			.catch(error => { console.log(error); })
 	}, false);
 
 
-	const HandleUpdates = function()
+	const getWebSocketsEndpoint = function()
+	{
+		return new Promise((resolve, reject) => {
+			const xhttp = new XMLHttpRequest();
+			xhttp.open("GET", "ws_endpoint");
+			xhttp.onload = () => {
+				if (xhttp.readyState === 4 && xhttp.status === 200) {
+					resolve(JSON.parse(xhttp.responseText));
+				}
+				else {reject(xhttp.statusText);}
+			}
+			xhttp.onerror = () => reject(xhttp.statusText);
+			xhttp.send();
+		});
+	}
+
+
+	const HandleUpdates = function(endpoint)
 	{
 		const table_titles = [
 			"url", "method", "status_code", 
@@ -23,7 +42,7 @@
 		const titles = document.getElementById("title_row");
 		const data_table = document.getElementById("data");
 		const detail_container = document.getElementById("detail-container");
-		const socket = new WebSocket("ws://192.168.192.131:3000/");
+		const socket = new WebSocket(`ws://${endpoint["IP"]}:${endpoint["PORT"]}/`);
 
 		table_titles.forEach((name) =>
 		{
@@ -36,7 +55,6 @@
 		socket.addEventListener("open", function (event)
 		{
 			socket.send("BROWSER");
-			console.log("OPENED");
 		});
 		
 		socket.addEventListener("close", function (event)
@@ -53,8 +71,6 @@
 			switch (link_data.sender)
 			{
 				case "Finder":
-					console.log("LINK");
-
 					// Add target endpoint values to main table
 					table_titles.forEach((name) =>
 					{

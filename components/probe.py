@@ -130,7 +130,7 @@ class Probe:
 
 
     async def _send_probe(self, probe_data):
-        URL = "ws://192.168.192.131:3000"
+        URL = f"ws://{self._startup.WEBSOCKETS_IP}:{self._startup.WEBSOCKETS_PORT}"
         async with websockets.connect(URL) as websocket:
             await websocket.send(probe_data)
 

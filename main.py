@@ -13,8 +13,7 @@ if __name__ == "__main__":
 
     signal.signal(signal.SIGINT, signal_handler)
     host_system = platform.system()
-    HOST_NAME = ""
-    PORT = 8080
+    HOST_NAME, HTTP_PORT = ("", 8080)
 
     try:
         if host_system == "Linux":
@@ -32,10 +31,11 @@ if __name__ == "__main__":
 
         startup_info = FindAndProbeInit()
         http_server = FindAndProbeHTTPServer(
-            (HOST_NAME, PORT), 
+            startup_info.WEBSOCKETS_PORT,
+            (HOST_NAME, HTTP_PORT), 
             FindAndProbeHandler)
         http_server.run()
-        websocket_server = WebSocketServer()
+        websocket_server = WebSocketServer(startup_info.WEBSOCKETS_PORT)
         websocket_server.run()
 
         finder_pipe, poller_pipe = mp.Pipe(duplex=True)

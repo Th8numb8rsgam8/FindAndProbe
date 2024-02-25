@@ -91,12 +91,11 @@ class Finder:
                 "secure": cookie.secure,
                 "value": cookie.value,
                 "version": cookie.version})
-        response_record["content"] = response.text
         asyncio.run(self._send_finder(json.dumps(response_record)))
 
 
     async def _send_finder(self, link_data):
-        URL = "ws://192.168.192.131:3000"
+        URL = f"ws://{self._startup.WEBSOCKETS_IP}:{self._startup.WEBSOCKETS_PORT}"
         async with websockets.connect(URL) as websocket:
             await websocket.send(link_data)
 

@@ -1,4 +1,4 @@
-import sass, os
+import sass, os, json
 import websockets, asyncio
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 from utils.init_support import CustomProcess
@@ -6,10 +6,10 @@ from utils.init_support import CustomProcess
 
 class WebSocketServer:
 
-    def __init__(self):
+    def __init__(self, port: int):
         self._connected = set()
         self._HOST_NAME = ""
-        self._PORT = 3000
+        self._PORT = port
         self._name = "WebSocket Server"
 
 
@@ -34,7 +34,6 @@ class WebSocketServer:
                 link_data = await websocket.recv()
                 if link_data == "BROWSER":
                     self._connected.add(websocket)
-                    print("LENGTH " + str(len(self._connected)))
                     # browser_websocket = websocket
                 else:
                     for conn in self._connected: 
@@ -48,11 +47,12 @@ class WebSocketServer:
 
 class FindAndProbeHTTPServer(HTTPServer):
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, websockets_port, *args, **kwargs):
 
         super().__init__(*args, **kwargs)
         self._name = "HTTP Server"
         self.frontend_dir = "frontend"
+        self.WEBSOCKETS_PORT = websockets_port
 
 
     def run(self):
@@ -73,6 +73,8 @@ class FindAndProbeHandler(SimpleHTTPRequestHandler):
             mimetype = "text/css"
         elif path == "/index.js":
             mimetype = "text/javascript"
+        elif path == "/ws_endpoint":
+            mimetype = "application/json"
         else:
             path = "/index.html"
             mimetype = "text/html"
@@ -85,6 +87,12 @@ class FindAndProbeHandler(SimpleHTTPRequestHandler):
             css_string = sass.compile(
                 filename=os.path.join(self.server.frontend_dir, path[1:]))
             self.wfile.write(css_string.encode("utf-8"))
+        elif path == "/ws_endpoint":
+            endpoint = {
+                "IP": self.server.server_name, 
+                "PORT": self.server.WEBSOCKETS_PORT
+            }
+            self.wfile.write(json.dumps(endpoint).encode("utf-8"))
         else:
             with open(os.path.join(
                 self.server.frontend_dir, path[1:]), 'rb') as f:
