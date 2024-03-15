@@ -47,7 +47,9 @@ class Poller:
         while True:
             if self._connection.poll():
                 link_data = self._connection.recv_bytes().decode('utf-8')
-                if link_data != "Finder Complete":
+                if link_data == "Fatal Exception":
+                    signal.raise_signal(signal.SIGINT)
+                elif link_data != "Finder Complete":
                     link_data = json.loads(link_data)
                     probes_pool.apply_async(
                         func=self.run_probe, 

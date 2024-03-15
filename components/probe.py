@@ -1,4 +1,5 @@
 import pdb
+import sqlite3
 import asyncio, websockets
 import os, time, http, glob, json
 import requests.exceptions as exc
@@ -13,6 +14,7 @@ class Probe:
         self._startup = startup
         self._xss_payload_list = None
         self._sql_payloads = {}
+        self._db_con = sqlite3.connect(startup.db_path)
         self._response_codes = {status.value: status.phrase for status in http.HTTPStatus}
 
         self._get_xss_payloads()

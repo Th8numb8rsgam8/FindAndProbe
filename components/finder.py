@@ -1,5 +1,6 @@
 import pdb
-import re, json, time
+import sqlite3, signal
+import os, re, json, time
 import asyncio, websockets
 import requests.exceptions as exc
 import urllib.parse as urlparse
@@ -11,7 +12,7 @@ class Finder:
 
     def __init__(self, startup, connection, ignore_links=[]) -> None:
         self._startup = startup
-        self._hostname = urlparse.urlparse(self._startup.args["target_url"]).hostname
+        self.db_con = sqlite3.connect(startup.db_path)
         self._connection = connection
         self._links_to_ignore = ignore_links
         self._response_data = {
@@ -38,17 +39,17 @@ class Finder:
 
 
     def _store_response_info(self, response) -> None:
-        self._response_data["method"].append(response.request.method)
-        self._response_data["path_url"].append(response.request.path_url)
-        self._response_data["request_headers"].append(response.request.headers)
-        self._response_data["status_code"].append(response.status_code)
-        self._response_data["reason"].append(response.reason)
-        self._response_data["response_headers"].append(response.headers)
-        self._response_data["apparent_encoding"].append(response.apparent_encoding)
-        self._response_data["cookies"].append(response.cookies)
-        self._response_data["content"].append(response.text)
-        self._response_data["history"].append(response.history)
-        self._response_data["elapsed_time"].append(response.elapsed.total_seconds())
+        # self._response_data["method"].append(response.request.method)
+        # self._response_data["path_url"].append(response.request.path_url)
+        # self._response_data["request_headers"].append(response.request.headers)
+        # self._response_data["status_code"].append(response.status_code)
+        # self._response_data["reason"].append(response.reason)
+        # self._response_data["response_headers"].append(response.headers)
+        # self._response_data["apparent_encoding"].append(response.apparent_encoding)
+        # self._response_data["cookies"].append(response.cookies)
+        # self._response_data["content"].append(response.text)
+        # self._response_data["history"].append(response.history)
+        # self._response_data["elapsed_time"].append(response.elapsed.total_seconds())
 
         response_record = {
             "sender": "Finder",
@@ -122,10 +123,13 @@ class Finder:
             exc.HTTPError,
             exc.ReadTimeout,
             exc.ConnectionError,
-            exc.TooManyRedirects,
-            exc.RequestException) as e:
+            exc.TooManyRedirects) as e:
             self._startup.logger.warning(str(e) + " " + url)
             return []
+        except exc.MissingSchema as e:
+            self._startup.logger.critical(str(e))
+            self._connection.send_bytes("Fatal Exception".encode('utf-8'))
+            signal.raise_signal(signal.SIGINT)
 
 
     def _crawl(self, url=None) -> None:
@@ -135,7 +139,7 @@ class Finder:
         for link in href_links:
             link = urlparse.urljoin(tgt_url, link)
             link, _ = urlparse.urldefrag(link)
-            if self._hostname in link \
+            if self._startup.hostname in link \
                 and link not in self._response_data["url"] \
                 and link not in self._links_to_ignore:
                     self._crawl(link)
