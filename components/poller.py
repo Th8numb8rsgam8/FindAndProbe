@@ -9,7 +9,7 @@ from utils.init_support import CustomProcess
 
 class Poller:
 
-    def __init__(self, startup_info, connection):
+    def __init__(self, startup_info, connection, queue):
         self._startup_info = startup_info
         self._connection = connection
 
