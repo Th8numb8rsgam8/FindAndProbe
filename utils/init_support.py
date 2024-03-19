@@ -78,7 +78,6 @@ class FindAndProbeInit:
                             ALTER TABLE {tbl_name} 
                             ADD COLUMN {col_info["name"]} {col_info["data_type"]};
                             ''')
-                        
                         con.commit()
         except sqlite3.OperationalError as e:
             self.logger.warning(str(e))

@@ -10,10 +10,11 @@ from utils.init_support import CustomProcess
 
 class Finder:
 
-    def __init__(self, startup, connection, ignore_links=[]) -> None:
+    def __init__(self, startup, connection, queue, ignore_links=[]) -> None:
         self._startup = startup
         self.db_con = sqlite3.connect(startup.db_path)
         self._connection = connection
+        self._queue = queue
         self._links_to_ignore = ignore_links
         self._response_data = {
             "method": [],
@@ -128,8 +129,7 @@ class Finder:
             return []
         except exc.MissingSchema as e:
             self._startup.logger.critical(str(e))
-            self._connection.send_bytes("Fatal Exception".encode('utf-8'))
-            signal.raise_signal(signal.SIGINT)
+            self._queue.put("Fatal Exception")
 
 
     def _crawl(self, url=None) -> None:
