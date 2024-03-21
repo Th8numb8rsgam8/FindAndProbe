@@ -53,14 +53,16 @@ class FindAndProbeInit:
 
 
     def _initialize_db(self):
+        if not os.path.isdir("database"):
+            os.mkdir("database")
 
         con = sqlite3.connect(self.db_path)
         try:
             for key, tbl_name in self.database_tables.items():
                 con.execute(f'''
                     CREATE TABLE IF NOT EXISTS {tbl_name}
-                    (Hostname TEXT PRIMARY KEY,
-                     Endpoint TEXT);
+                    (Hostname TEXT,
+                     Endpoint TEXT PRIMARY KEY);
                     ''')
                 con.commit()
                 if key == "Main":
@@ -71,8 +73,6 @@ class FindAndProbeInit:
                         {"name": "apparent_encoding", "data_type": " TEXT"},
                         {"name": "elapsed_time", "data_type": "REAL"}]
 
-                    # values = ({"val": "HI"}, {"val": "BYE"})
-                    values = [("HI",),("BYE",)]
                     for col_info in col_names:
                         con.execute(f'''
                             ALTER TABLE {tbl_name} 

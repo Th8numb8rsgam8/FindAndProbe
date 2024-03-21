@@ -10,25 +10,14 @@ from utils.init_support import CustomProcess
 
 class Finder:
 
-    def __init__(self, startup, connection, queue, ignore_links=[]) -> None:
+    def __init__(self, startup, connection, queue) -> None:
         self._startup = startup
         self.db_con = sqlite3.connect(startup.db_path)
         self._connection = connection
         self._queue = queue
-        self._links_to_ignore = ignore_links
-        self._response_data = {
-            "method": [],
-            "path_url": [],
-            "url": [],
-            "request_headers": [],
-            "status_code": [],
-            "reason": [],
-            "response_headers": [],
-            "apparent_encoding": [],
-            "cookies": [],
-            "content": [],
-            "history": [],
-            "elapsed_time": []}
+
+        res = self.db_con.execute("SELECT Endpoint FROM main_table")
+        self._links_to_ignore = [url[0] for url in res.fetchall()]
 
 
     def run(self) -> None:
@@ -40,17 +29,47 @@ class Finder:
 
 
     def _store_response_info(self, response) -> None:
-        # self._response_data["method"].append(response.request.method)
-        # self._response_data["path_url"].append(response.request.path_url)
-        # self._response_data["request_headers"].append(response.request.headers)
-        # self._response_data["status_code"].append(response.status_code)
-        # self._response_data["reason"].append(response.reason)
-        # self._response_data["response_headers"].append(response.headers)
-        # self._response_data["apparent_encoding"].append(response.apparent_encoding)
-        # self._response_data["cookies"].append(response.cookies)
-        # self._response_data["content"].append(response.text)
-        # self._response_data["history"].append(response.history)
-        # self._response_data["elapsed_time"].append(response.elapsed.total_seconds())
+
+        if response.url not in self._links_to_ignore:
+            self._links_to_ignore.append(response.url)
+            self.db_con.execute(f'''
+                INSERT INTO {self._startup.database_tables["Main"]}
+                    (Hostname, Endpoint, method, path_url, reason, apparent_encoding, elapsed_time)
+                VALUES
+                    ("{self._startup.hostname}", "{response.url}", "{response.request.method}",
+                    "{response.request.path_url}", "{response.reason}",
+                    "{response.apparent_encoding}", {response.elapsed.total_seconds()});
+                ''')
+            self.db_con.commit()
+
+            request_columns = [col[1] for col in self.db_con.execute(f'''
+                PRAGMA table_info({self._startup.database_tables["Requests"]})
+                ''')]
+            names = []
+            values = []
+            for name, val in response.request.headers.items():
+                if name not in request_columns:
+                    self.db_con.execute(f'''
+                        ALTER TABLE {self._startup.database_tables["Requests"]}
+                        ADD COLUMN "{name}" TEXT;
+                    ''')
+                    self.db_con.commit()
+                names.append(name)
+                values.append(val)
+            names = "('" + "', '".join(names) + "')"
+            values = "('" + "', '".join(values) + "')"
+            # print(f'''
+            #     INSERT INTO {self._startup.database_tables["Requests"]}
+            #     {names} VALUES {values}; 
+            #     ''')
+            self.db_con.execute(f'''
+                INSERT INTO {self._startup.database_tables["Requests"]}
+                {names} VALUES {values}; 
+            ''')
+            self.db_con.commit()
+
+
+    def _send_response_to_websocket(self, response) -> None:
 
         response_record = {
             "sender": "Finder",
@@ -58,8 +77,7 @@ class Finder:
             "response_headers": {},
             "cookies": []
         }
-        query_string = urlparse.urlparse(response.url).query
-        query_dict = urlparse.parse_qs(query_string, keep_blank_values=True)
+
         response_record["url"] = response.url
         response_record["method"] = response.request.method
         response_record["path_url"] = response.request.path_url
@@ -67,7 +85,11 @@ class Finder:
         response_record["reason"] = response.reason
         response_record["apparent_encoding"] = response.apparent_encoding
         response_record["elapsed_time"] = response.elapsed.total_seconds()
+
+        query_string = urlparse.urlparse(response.url).query
+        query_dict = urlparse.parse_qs(query_string, keep_blank_values=True)
         response_record["query_parameters"] = query_dict
+
         for name, val in response.request.headers.items():
             response_record["request_headers"][name] = val
         for name, val in response.headers.items():
@@ -96,6 +118,7 @@ class Finder:
         asyncio.run(self._send_finder(json.dumps(response_record)))
 
 
+
     async def _send_finder(self, link_data):
         URL = f"ws://{self._startup.WEBSOCKETS_IP}:{self._startup.WEBSOCKETS_PORT}"
         async with websockets.connect(URL) as websocket:
@@ -104,7 +127,6 @@ class Finder:
 
     def _extract_links_from(self, url) -> list:
         try:
-            self._response_data["url"].append(url)
             response = self._startup.session.get(
                 url, 
                 timeout=self._startup.args["request_timeout"])
@@ -115,6 +137,7 @@ class Finder:
                 "response": response.text,
                 "status_code": response.status_code})
             self._connection.send_bytes(to_probe.encode('utf-8'))
+            self._send_response_to_websocket(response)
             self._store_response_info(response)
             return re.findall(
                 '(?:href=")(.*?)"',
@@ -140,7 +163,6 @@ class Finder:
             link = urlparse.urljoin(tgt_url, link)
             link, _ = urlparse.urldefrag(link)
             if self._startup.hostname in link \
-                and link not in self._response_data["url"] \
                 and link not in self._links_to_ignore:
                     self._crawl(link)
         if url is None:
