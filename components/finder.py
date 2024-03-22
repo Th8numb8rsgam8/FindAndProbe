@@ -1,5 +1,5 @@
 import pdb
-import sqlite3, signal
+import sqlite3, signal 
 import os, re, json, time
 import asyncio, websockets
 import requests.exceptions as exc
@@ -16,7 +16,9 @@ class Finder:
         self._connection = connection
         self._queue = queue
 
-        res = self.db_con.execute("SELECT Endpoint FROM main_table")
+        res = self.db_con.execute(f'''
+            SELECT Endpoint FROM main_table 
+            WHERE Hostname = "{self._startup.hostname}";''')
         self._links_to_ignore = [url[0] for url in res.fetchall()]
 
 
@@ -42,31 +44,65 @@ class Finder:
                 ''')
             self.db_con.commit()
 
-            request_columns = [col[1] for col in self.db_con.execute(f'''
-                PRAGMA table_info({self._startup.database_tables["Requests"]})
-                ''')]
-            names = []
-            values = []
-            for name, val in response.request.headers.items():
-                if name not in request_columns:
-                    self.db_con.execute(f'''
-                        ALTER TABLE {self._startup.database_tables["Requests"]}
-                        ADD COLUMN "{name}" TEXT;
-                    ''')
-                    self.db_con.commit()
-                names.append(name)
-                values.append(val)
-            names = "('" + "', '".join(names) + "')"
-            values = "('" + "', '".join(values) + "')"
-            # print(f'''
-            #     INSERT INTO {self._startup.database_tables["Requests"]}
-            #     {names} VALUES {values}; 
-            #     ''')
-            self.db_con.execute(f'''
-                INSERT INTO {self._startup.database_tables["Requests"]}
-                {names} VALUES {values}; 
-            ''')
-            self.db_con.commit()
+            http_headers = {
+                "Requests": response.request.headers,
+                "Responses": response.headers}
+            for table, headers in http_headers.items():
+                columns = [col[1] for col in self.db_con.execute(f'''
+                    PRAGMA table_info({self._startup.database_tables[table]})
+                    ''')]
+
+                names = []
+                values = []
+                names.extend(["Hostname", "Endpoint"])
+                values.extend([self._startup.hostname, response.url])
+
+                for name, val in headers.items():
+                    if name not in columns:
+                        self.db_con.execute(f'''
+                            ALTER TABLE {self._startup.database_tables[table]}
+                            ADD COLUMN "{name}" TEXT;
+                        ''')
+                        self.db_con.commit()
+                    names.append(name)
+                    values.append(val)
+
+                names = "('" + "', '".join(names) + "')"
+                values = "('" + "', '".join(values) + "')"
+                self.db_con.execute(f'''
+                    INSERT INTO {self._startup.database_tables[table]}
+                    {names} VALUES {values}; 
+                ''')
+                self.db_con.commit()
+
+            for cookie in response.cookies:
+                names = [
+                    "Hostname", "Endpoint",
+                    "comment", "comment_url", "discard", "domain",
+                    "domain_initial_dot", "domain_specified", "expires",
+                    "nonstandard_attr", "has_nonstandard_attr", "is_expired",
+                    "name", "path", "path_specified", "port", "port_specified",
+                    "rfc2109", "secure", "value", "version"
+                ]
+
+                values = [
+                    self._startup.hostname, response.url,
+                    cookie.comment, cookie.comment_url, cookie.discard,
+                    cookie.domain_initial_dot, cookie.domain_specified, cookie.expires,
+                    cookie.get_nonstandard_attr(cookie.name), 
+                    cookie.has_nonstandard_attr(cookie.name),
+                    cookie.is_expired(), cookie.name, cookie.path,
+                    cookie.path_specified, cookie.port, cookie.port_specified,
+                    cookie.rfc2109, cookie.secure, cookie.value, cookie.version
+                ]
+
+                names = "('" + "', '".join(names) + "')"
+                values = "('" + "', '".join(values) + "')"
+                self.db_con.execute(f'''
+                    INSERT INTO {self._startup.database_tables["Cookies"]}
+                    {names} VALUES {values}; 
+                ''')
+                self.db_con.commit()
 
 
     def _send_response_to_websocket(self, response) -> None:
@@ -101,7 +137,7 @@ class Finder:
                 "discard": cookie.discard,
                 "domain": cookie.domain,
                 "domain_initial_dot": cookie.domain_initial_dot,
-                "domain_speficied": cookie.domain_specified,
+                "domain_specified": cookie.domain_specified,
                 "expires": cookie.expires,
                 "nonstandard_attr": cookie.get_nonstandard_attr(cookie.name),
                 "has_nonstandard_attr": cookie.has_nonstandard_attr(cookie.name),

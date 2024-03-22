@@ -26,6 +26,7 @@ class FindAndProbeInit:
             "Main": "main_table",
             "Requests": "request_headers", 
             "Responses": "response_headers", 
+            "Cookies": "cookie_details",
             "Probes": "probe_results"}
         self.session = requests.Session()
         self.WEBSOCKETS_IP, self.WEBSOCKETS_PORT = ("localhost", 3000)
@@ -79,8 +80,38 @@ class FindAndProbeInit:
                             ADD COLUMN {col_info["name"]} {col_info["data_type"]};
                             ''')
                         con.commit()
+                elif key == "Cookies":
+                    col_names = [
+                        {"name": "comment", "data_type": "TEXT"},
+                        {"name": "comment_url", "data_type": "TEXT"},
+                        {"name": "discard", "data_type": "TEXT"},
+                        {"name": "domain", "data_type": "TEXT"},
+                        {"name": "domain_initial_dot", "data_type": "TEXT"},
+                        {"name": "domain_specified", "data_type": "TEXT"},
+                        {"name": "expires", "data_type": "INTEGER"},
+                        {"name": "nonstandard_attr", "data_type": "TEXT"},
+                        {"name": "has_nonstandard_attr", "data_type": "TEXT"},
+                        {"name": "is_expired", "data_type": "TEXT"},
+                        {"name": "name", "data_type": "TEXT"},
+                        {"name": "path", "data_type": "TEXT"},
+                        {"name": "path_specified", "data_type": "TEXT"},
+                        {"name": "port", "data_type": "INTEGER"},
+                        {"name": "port_specified", "data_type": "TEXT"},
+                        {"name": "rfc2109", "data_type": "TEXT"},
+                        {"name": "secure", "data_type": "TEXT"},
+                        {"name": "value", "data_type": "TEXT"},
+                        {"name": "version", "data_type": "REAL"}
+                    ]
+                    for col_info in col_names:
+                        con.execute(f'''
+                            ALTER TABLE {tbl_name} 
+                            ADD COLUMN {col_info["name"]} {col_info["data_type"]};
+                            ''')
+                        con.commit()
+
         except sqlite3.OperationalError as e:
             self.logger.warning(str(e))
+
         finally:
             con.close()
 
