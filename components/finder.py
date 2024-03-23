@@ -76,28 +76,37 @@ class Finder:
                 self.db_con.commit()
 
             for cookie in response.cookies:
-                names = [
-                    "Hostname", "Endpoint",
-                    "comment", "comment_url", "discard", "domain",
-                    "domain_initial_dot", "domain_specified", "expires",
-                    "nonstandard_attr", "has_nonstandard_attr", "is_expired",
-                    "name", "path", "path_specified", "port", "port_specified",
-                    "rfc2109", "secure", "value", "version"
-                ]
+                cookie_data = {
+                    "Hostname": self._startup.hostname,
+                    "Endpoint": response.url,
+                    "comment": cookie.comment,
+                    "comment_url": cookie.comment_url,
+                    "discard": cookie.discard,
+                    "domain": cookie.domain,
+                    "domain_initial_dot": cookie.domain_initial_dot,
+                    "domain_specified": cookie.domain_specified,
+                    "expires": cookie.expires,
+                    "nonstandard_attr": cookie.get_nonstandard_attr(cookie.name),
+                    "has_nonstandard_attr": cookie.has_nonstandard_attr(cookie.name),
+                    "is_expired": cookie.is_expired(),
+                    "name": cookie.name,
+                    "path": cookie.path,
+                    "path_specified": cookie.path_specified,
+                    "port": cookie.port,
+                    "port_specified": cookie.port_specified,
+                    "rfc2109": cookie.rfc2109,
+                    "secure": cookie.secure,
+                    "value": cookie.value,
+                    "version": cookie.version
+                }
 
-                values = [
-                    self._startup.hostname, response.url,
-                    cookie.comment, cookie.comment_url, cookie.discard,
-                    cookie.domain_initial_dot, cookie.domain_specified, cookie.expires,
-                    cookie.get_nonstandard_attr(cookie.name), 
-                    cookie.has_nonstandard_attr(cookie.name),
-                    cookie.is_expired(), cookie.name, cookie.path,
-                    cookie.path_specified, cookie.port, cookie.port_specified,
-                    cookie.rfc2109, cookie.secure, cookie.value, cookie.version
-                ]
+                remove_empty = []
+                [remove_empty.append(name) for name, val in cookie_data.items() if val is None]
+                [cookie_data.pop(i) for i in remove_empty]
+                cookie_data = {key: str(val) for key, val in cookie_data.items()}
 
-                names = "('" + "', '".join(names) + "')"
-                values = "('" + "', '".join(values) + "')"
+                names = "('" + "', '".join(cookie_data.keys()) + "')"
+                values = "('" + "', '".join(cookie_data.values()) + "')"
                 self.db_con.execute(f'''
                     INSERT INTO {self._startup.database_tables["Cookies"]}
                     {names} VALUES {values}; 
