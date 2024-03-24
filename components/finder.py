@@ -33,17 +33,26 @@ class Finder:
     def _store_response_info(self, response) -> None:
 
         if response.url not in self._links_to_ignore:
+
+            # store data in main_table
+            query_string = urlparse.urlparse(response.url).query
+            query_dict = urlparse.parse_qs(query_string, keep_blank_values=True)
+            query_parameters = " ".join(query_dict.keys())
+
             self._links_to_ignore.append(response.url)
             self.db_con.execute(f'''
                 INSERT INTO {self._startup.database_tables["Main"]}
-                    (Hostname, Endpoint, method, path_url, reason, apparent_encoding, elapsed_time)
+                    (Hostname, Endpoint, method, path_url, 
+                    reason, apparent_encoding, elapsed_time, query_parameters)
                 VALUES
-                    ("{self._startup.hostname}", "{response.url}", "{response.request.method}",
-                    "{response.request.path_url}", "{response.reason}",
-                    "{response.apparent_encoding}", {response.elapsed.total_seconds()});
+                    ("{self._startup.hostname}", "{response.url}", 
+                    "{response.request.method}", "{response.request.path_url}", 
+                    "{response.reason}", "{response.apparent_encoding}", 
+                    {response.elapsed.total_seconds()}, "{query_parameters}");
                 ''')
             self.db_con.commit()
 
+            # store HTTP headers data in two different tables
             http_headers = {
                 "Requests": response.request.headers,
                 "Responses": response.headers}
@@ -75,6 +84,7 @@ class Finder:
                 ''')
                 self.db_con.commit()
 
+            # store cookie data in its own table
             for cookie in response.cookies:
                 cookie_data = {
                     "Hostname": self._startup.hostname,
@@ -161,7 +171,6 @@ class Finder:
                 "value": cookie.value,
                 "version": cookie.version})
         asyncio.run(self._send_finder(json.dumps(response_record)))
-
 
 
     async def _send_finder(self, link_data):

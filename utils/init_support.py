@@ -72,7 +72,9 @@ class FindAndProbeInit:
                         {"name": "path_url", "data_type":  "TEXT"}, 
                         {"name": "reason",  "data_type": "TEXT"}, 
                         {"name": "apparent_encoding", "data_type": " TEXT"},
-                        {"name": "elapsed_time", "data_type": "REAL"}]
+                        {"name": "elapsed_time", "data_type": "REAL"},
+                        {"name": "query_parameters", "data_type": "TEXT"},
+                    ]
 
                     for col_info in col_names:
                         con.execute(f'''
