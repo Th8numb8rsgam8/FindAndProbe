@@ -1,10 +1,8 @@
-import pdb
+from . import *
 import sqlite3
-import asyncio, websockets
-import os, time, http, glob, json
+import time, http, glob
 import requests.exceptions as exc
 from bs4 import BeautifulSoup
-from logs.custom_logging import CustomFormatter as cf
 import urllib.parse as urlparse 
 
 

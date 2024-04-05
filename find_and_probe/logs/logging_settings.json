@@ -4,7 +4,7 @@
 	{
 		"console_fmt": 
 		{
-			"()": "logs.custom_logging.ConsoleLogging",
+			"()": "find_and_probe.logs.custom_logging.ConsoleLogging",
 			"fmt": "[%(asctime)s] | %(processName)s | %(process)d | %(levelname)s | %(message)s",
 			"datefmt": "%m/%d/%Y %I:%M:%S %p",
 			"msecfmt": "",
@@ -16,7 +16,7 @@
 		},
 		"finder_fmt":
 		{
-			"()": "logs.custom_logging.FinderLogging",
+			"()": "find_and_probe.logs.custom_logging.FinderLogging",
 			"fmt": "%(relativeCreated)-25s %(message)s",
 			"datefmt": "%m/%d/%Y %I:%M:%S %p",
 			"msecfmt": "",
@@ -28,7 +28,7 @@
 		},
 		"probe_fmt":
 		{
-			"()": "logs.custom_logging.ProbeLogging",
+			"()": "find_and_probe.logs.custom_logging.ProbeLogging",
 			"fmt": "%(relativeCreated)-25s %(message)s | %(payload)s | %(response)s",
 			"datefmt": "%m/%d/%Y %I:%M:%S %p",
 			"msecfmt": "",
@@ -43,17 +43,17 @@
 	{
 		"console_filter":
 		{
-			"()": "logs.custom_logging.ConsoleFilter",
+			"()": "find_and_probe.logs.custom_logging.ConsoleFilter",
 			"name": "console_filter"
 		},
 		"finder_filter":
 		{
-			"()": "logs.custom_logging.FinderFilter",
+			"()": "find_and_probe.logs.custom_logging.FinderFilter",
 			"name": "finder_filter"
 		},
 		"probe_filter":
 		{
-			"()": "logs.custom_logging.ProbeFilter",
+			"()": "find_and_probe.logs.custom_logging.ProbeFilter",
 			"name": "probe_filter"
 		}
 	},

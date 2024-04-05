@@ -1,6 +1,5 @@
 import logging
 import re
-import pdb
 
 class CustomFormatter(logging.Formatter):
 

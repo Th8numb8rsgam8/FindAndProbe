@@ -1,11 +1,11 @@
-import pdb
 import os, json 
 import sqlite3
 import requests
-from utils.cli_args import CLIArgs as CLI
+from .cli_args import CLIArgs as CLI
 import sys, signal, asyncio
 import logging.config
-from logs.custom_logging import cli_output
+from ..logs.custom_logging import cli_output
+from ..logs import LOGGING_SETTINGS
 import multiprocessing as mp
 import urllib.parse as urlparse 
 
@@ -30,7 +30,7 @@ class FindAndProbeInit:
             "Probes": "probe_results"}
         self.session = requests.Session()
         self.WEBSOCKETS_IP, self.WEBSOCKETS_PORT = ("localhost", 3000)
-        self.db_path = os.path.join("database", "targets_db.db")
+        self.db_path = os.path.join(os.getcwd(), "database", "targets_db.db")
 
         # initialize CLI argument inputs
         user_input = CLI()
@@ -40,11 +40,7 @@ class FindAndProbeInit:
 
 
         # initialize logger
-        f = open(os.path.join(
-            "..",
-            os.getcwd(),
-            "logs",
-            "logging_settings.json"))
+        f = open(LOGGING_SETTINGS)
         logging_configs = json.load(f)
         logging.config.dictConfig(logging_configs)
         self.logger = logging.getLogger()
