@@ -47,5 +47,10 @@ class CLIArgs:
             nargs="*",
             choices=self._http_status_vals,
             help="HTTP response codes to ignore from probing target links.")
+        cli_parser.add_argument(
+            "-b", "--browser",
+            dest="show_browser",
+            action="store_true",
+            help="Flag to pull up the browser to view target results")
         cli_parser.add_argument("--version", action="version", version='%(prog)s 0.0.1')
         self.argument_values = vars(cli_parser.parse_args())

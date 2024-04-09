@@ -119,7 +119,6 @@ class Probe:
                         "probe_type": "XSS",
                         "payload": xss_payload, 
                         "response": response}
-                    asyncio.run(self._send_probe(json.dumps(probe_data)))
                     self._startup.logger.info(
                         f"SUCCESSFUL PROBE: {cf.BOLD + url + cf.RESET}", 
                         extra=
@@ -127,6 +126,9 @@ class Probe:
                             "payload": cf.GREEN + xss_payload + cf.RESET,
                             "response": cf.CYAN + response + cf.RESET
                         })
+
+                    if self._startup.args["show_browser"]:
+                        asyncio.run(self._send_probe(json.dumps(probe_data)))
                     return True
 
 

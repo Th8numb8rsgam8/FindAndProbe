@@ -1,4 +1,5 @@
 from . import *
+from ..frontend import FRONTEND_DIR
 import sass
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 
@@ -50,7 +51,7 @@ class FindAndProbeHTTPServer(HTTPServer):
 
         super().__init__(*args, **kwargs)
         self._name = "HTTP Server"
-        self.frontend_dir = "frontend"
+        self.frontend_dir = FRONTEND_DIR
         self.WEBSOCKETS_PORT = websockets_port
 
 

@@ -12,6 +12,7 @@ class Finder:
         self.db_con = sqlite3.connect(startup.db_path)
         self._connection = connection
         self._queue = queue
+        self._name = "Finder Process"
 
         res = self.db_con.execute(f'''
             SELECT Endpoint FROM main_table 
@@ -23,7 +24,7 @@ class Finder:
         # self._crawl()
         finder_process = CustomProcess(
             self._crawl,
-            name="Finder Process")
+            name=self._name)
         finder_process.start()
 
 
@@ -167,7 +168,8 @@ class Finder:
                 "secure": cookie.secure,
                 "value": cookie.value,
                 "version": cookie.version})
-        asyncio.run(self._send_finder(json.dumps(response_record)))
+        if self._startup.args["show_browser"]:
+            asyncio.run(self._send_finder(json.dumps(response_record)))
 
 
     async def _send_finder(self, link_data):

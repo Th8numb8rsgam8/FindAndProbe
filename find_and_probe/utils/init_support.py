@@ -38,7 +38,6 @@ class FindAndProbeInit:
         self.args = user_input.argument_values
         self.hostname = urlparse.urlparse(self.args["target_url"]).hostname
 
-
         # initialize logger
         f = open(LOGGING_SETTINGS)
         logging_configs = json.load(f)

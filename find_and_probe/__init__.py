@@ -38,13 +38,17 @@ def initialize_processes(host_address):
         shared_queue = manager.Queue()
 
         startup_info = FindAndProbeInit()
-        http_server = FindAndProbeHTTPServer(
-            startup_info.WEBSOCKETS_PORT,
-            (HOST_NAME, HTTP_PORT), 
-            FindAndProbeHandler)
-        http_server.run()
-        websocket_server = WebSocketServer(startup_info.WEBSOCKETS_PORT)
-        websocket_server.run()
+
+        if startup_info.args["show_browser"]:
+            import webbrowser
+            http_server = FindAndProbeHTTPServer(
+                startup_info.WEBSOCKETS_PORT,
+                (HOST_NAME, HTTP_PORT), 
+                FindAndProbeHandler)
+            http_server.run()
+            websocket_server = WebSocketServer(startup_info.WEBSOCKETS_PORT)
+            websocket_server.run()
+            webbrowser.open(f"http://{HOST_NAME}:{HTTP_PORT}")
 
         finder_pipe, poller_pipe = mp.Pipe(duplex=True)
         finder_proc = Finder(startup_info, finder_pipe, shared_queue)
