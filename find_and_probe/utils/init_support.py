@@ -1,7 +1,8 @@
-import os, json 
+import os, json, typing
 import sqlite3
 import requests
 from .cli_args import CLIArgs as CLI
+from .cli_args import ArgumentDict
 import sys, signal, asyncio
 import logging.config
 from ..logs.custom_logging import cli_output
@@ -22,21 +23,21 @@ class SigExc(Exception):
 class FindAndProbeInit:
 
     def __init__(self) -> None:
-        self.database_tables = {
+        self._database_tables: typing.Dict[str, str] = {
             "Main": "main_table",
             "Requests": "request_headers", 
             "Responses": "response_headers", 
             "Cookies": "cookie_details",
             "Probes": "probe_results"}
-        self.session = requests.Session()
-        self.WEBSOCKETS_IP, self.WEBSOCKETS_PORT = ("localhost", 3000)
-        self.db_path = os.path.join(os.getcwd(), "database", "targets_db.db")
+        self._session: typing.Type[requests.Session] = requests.Session()
+        self._WEBSOCKETS_IP: str = "localhost"
+        self._WEBSOCKETS_PORT: int = 3000
+        self._db_path: str = os.path.join(os.getcwd(), "database", "targets_db.db")
 
         # initialize CLI argument inputs
         user_input = CLI()
-        user_input.collect_arguments()
-        self.args = user_input.argument_values
-        self.hostname = urlparse.urlparse(self.args["target_url"]).hostname
+        self._args: ArgumentDict = user_input.argument_values
+        self._hostname: str = urlparse.urlparse(self._args["target_url"]).hostname
 
         # initialize logger
         f = open(LOGGING_SETTINGS)
@@ -47,12 +48,46 @@ class FindAndProbeInit:
         # initialize & record target name in target database
         self._initialize_db()
 
+    @property
+    def args(self) -> ArgumentDict:
+        return self._args
+
+
+    @property
+    def hostname(self) -> str:
+        return self._hostname
+
+
+    @property
+    def database_tables(self) -> typing.Dict[str, str]:
+        return self._database_tables
+
+
+    @property
+    def WEBSOCKETS_IP(self) -> str:
+        return self._WEBSOCKETS_IP
+
+
+    @property
+    def WEBSOCKETS_PORT(self) -> int:
+        return self._WEBSOCKETS_PORT
+
+
+    @property
+    def session(self) -> typing.Type[requests.Session]:
+        return self._session
+
+
+    @property
+    def db_path(self) -> str:
+        return self._db_path
+
 
     def _initialize_db(self):
         if not os.path.isdir("database"):
             os.mkdir("database")
 
-        con = sqlite3.connect(self.db_path)
+        con = sqlite3.connect(self._db_path)
         try:
             for key, tbl_name in self.database_tables.items():
                 con.execute(f'''

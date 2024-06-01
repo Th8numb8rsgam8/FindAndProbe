@@ -1,19 +1,37 @@
+import typing
 import argparse
 import http
 
+
+class ArgumentDict(typing.TypedDict):
+    target_url: str
+    request_timeout: float
+    request_delay: float
+    ignore_codes: typing.List[int]
+    show_browser: bool
+
+
 class CLIArgs:
 
-    def __init__(self):
+    def __init__(self) -> None:
 
         # default CLI argument values
-        self._default_req_timeout = 5.0
-        self._default_req_delay = 3.0
-        self.argument_values = None
+        self._default_req_timeout: float = 5.0
+        self._default_req_delay: float = 3.0
         http_status_list = list(http.HTTPStatus)
-        self._http_status_vals = [status.value for status in http_status_list]
+        self._http_status_vals: typing.List[int] = [status.value for status in http_status_list]
+
+        # collect argument values
+        self._argument_values: ArgumentDict
+        self._collect_arguments()
 
 
-    def collect_arguments(self):
+    @property
+    def argument_values(self) -> ArgumentDict:
+        return self._argument_values
+
+
+    def _collect_arguments(self) -> None:
         cli_parser = argparse.ArgumentParser(
             prog="Find'n Probe",
             formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -53,4 +71,4 @@ class CLIArgs:
             action="store_true",
             help="Flag to pull up the browser to view target results")
         cli_parser.add_argument("--version", action="version", version='%(prog)s 0.0.1')
-        self.argument_values = vars(cli_parser.parse_args())
+        self._argument_values = vars(cli_parser.parse_args())
